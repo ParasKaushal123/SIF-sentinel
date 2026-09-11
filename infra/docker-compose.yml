@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sif_user
+      POSTGRES_PASSWORD: sif_pass
+      POSTGRES_DB: sif_sentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sif_user -d sif_sentinel"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ../services/backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://sif_user:sif_pass@postgres:5432/sif_sentinel
+      DATABASE_URL_SYNC: postgresql://sif_user:sif_pass@postgres:5432/sif_sentinel
+      MODEL_PROVIDER: fixture
+      DEMO_MODE: "true"
+      RUN_MIGRATIONS: "true"
+      WORKER_ENABLED: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../services/backend:/app
+      # app/main.py resolves the frontend dir as <app/app>/../../frontend,
+      # which is /frontend inside the container (only backend is mounted at
+      # /app). Mount the static frontend there so both the pages and api.js's
+      # same-origin /api/v1 calls are served from http://localhost:8000.
+      - ../services/frontend:/frontend
+      # insights_service.py resolves site_coordinates.yaml as
+      # <app/app/services>/../../.../safety -> /app/safety
+      - ../safety:/app/safety
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build:
+      context: ../services/backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://sif_user:sif_pass@postgres:5432/sif_sentinel
+      DATABASE_URL_SYNC: postgresql://sif_user:sif_pass@postgres:5432/sif_sentinel
+      MODEL_PROVIDER: fixture
+      DEMO_MODE: "true"
+      WORKER_ENABLED: "true"
+      WORKER_CONCURRENCY: "4"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../services/backend:/app
+      - ../safety:/app/safety
+    command: python -m app.worker.main
+
+volumes:
+  pgdata:

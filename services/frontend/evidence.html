@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SIF Sentinel — Evidence Graph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f2f0ec; --ink:#141420; --ink-2:#5a5a6a; --ink-3:#68687a;
+  --line:rgba(20,20,32,.13);
+  --violet:#5b3df5; --violet-soft:rgba(91,61,245,.10);
+  --amber:#b5730b; --teal:#0d8467; --rose:#c0392b;
+  --glass:rgba(255,255,255,.76);
+  --shadow:0 1px 2px rgba(20,20,40,.05), 0 8px 26px -10px rgba(20,20,40,.22);
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Space Grotesk',system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;text-align:left}
+input,select{font:inherit;color:inherit}
+a{color:var(--violet);text-decoration:none} a:hover{color:#3f27c9}
+.mono{font-family:'IBM Plex Mono',monospace}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.glass{background:var(--glass);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);border:1px solid rgba(255,255,255,.7);box-shadow:var(--shadow);border-radius:var(--r)}
+.glass-ring{outline:1px solid var(--line);outline-offset:-1px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;flex:none;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.6);font-size:11.5px;color:var(--ink-2);white-space:nowrap}
+.pill:hover{background:#fff;color:var(--ink)}
+.pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pill:focus-visible,.nav:focus-visible,.tbtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+
+#atmos{position:fixed;inset:-10%;z-index:0;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(72px);opacity:.5}
+#b1{width:42vw;height:42vw;left:4%;top:4%;background:radial-gradient(circle at 40% 40%,#c9c2ff,#e8dcff 45%,rgba(240,236,255,0) 70%)}
+#b2{width:40vw;height:40vw;right:3%;top:16%;background:radial-gradient(circle at 50% 50%,#ffd9c4,#ffe9dc 45%,rgba(255,245,240,0) 70%)}
+#b3{width:44vw;height:44vw;left:30%;bottom:-18%;background:radial-gradient(circle at 50% 50%,#bfe6e0,#d9f0ea 45%,rgba(240,255,250,0) 70%)}
+#grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.3;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+
+#shell{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column}
+header#top{height:54px;flex:none;display:flex;align-items:center;gap:12px;padding:0 16px 0 14px;background:rgba(255,255,255,.62);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);z-index:40}
+.brand{display:flex;align-items:center;gap:9px;flex:none}
+.brand .mk{width:20px;height:20px;border-radius:6px;background:linear-gradient(140deg,var(--violet),#8b6bff);box-shadow:0 2px 8px rgba(91,61,245,.35);position:relative}
+.brand .mk::after{content:"";position:absolute;inset:6px;border-radius:2px;background:#fff;opacity:.9}
+.brand b{font-size:13.5px;font-weight:600}
+.crumb{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 120px;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.6);font-size:11.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumb b{font-weight:500;color:var(--ink)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none}
+.hdr-right::-webkit-scrollbar{display:none}
+.crumb{flex:1 1 auto}
+
+#body{position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+#stage{position:relative;flex:1 1 auto;min-height:0;display:flex;align-items:stretch;gap:10px;padding:10px 12px 0 var(--dockgap,78px)}
+#canvasWrap{position:relative;flex:1 1 auto;min-width:0;min-height:0;overflow:hidden;border-radius:14px}
+#foot{flex:none;display:flex;align-items:flex-end;gap:8px;padding:0 16px 10px var(--dockgap,78px);z-index:33}
+#foot #scrub{flex:1 1 auto;min-width:0}
+
+#dock{position:absolute;left:14px;top:50%;transform:translateY(-50%);z-index:36;padding:7px;display:flex;flex-direction:column;gap:4px}
+.nav{position:relative;display:flex;align-items:center;gap:10px;height:40px;width:40px;padding:0 11px;border-radius:11px;overflow:hidden;white-space:nowrap;transition:width .32s cubic-bezier(.22,1,.36,1),background .18s;color:inherit}
+.nav svg{flex:none;opacity:.7}
+.nav span{font-size:12.5px;opacity:0;transition:opacity .2s}
+#dock:hover .nav{width:162px}
+#dock{transition:none}
+#dock:hover .nav span{opacity:1}
+.nav:hover{background:rgba(20,20,32,.06)}
+.nav.on{background:var(--ink);color:#fff}
+.nav.on svg{opacity:1}
+
+/* canvas */
+#canvas{position:absolute;inset:0;overflow:hidden;cursor:grab;border-radius:14px}
+#canvas.drag{cursor:grabbing}
+#g{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#overlay{position:absolute;inset:0;pointer-events:none;z-index:20}
+#overlay>*{pointer-events:auto}
+
+/* svg vocabulary */
+.edge{fill:none;stroke:rgba(20,20,32,.34);transition:opacity .35s,stroke .35s,stroke-width .35s}
+.edge.inferred{stroke-dasharray:7 6}
+.edge.context{stroke:rgba(20,20,32,.2);stroke-width:1;stroke-dasharray:1.5 5}
+.edge.live{stroke:var(--violet)}
+.edge.under{opacity:.25}
+.edge.dim{opacity:.10}
+.edge.lit{stroke:var(--violet);opacity:1}
+.elabel{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;fill:var(--ink-3);text-transform:uppercase}
+.flow{fill:none;stroke:var(--violet);stroke-width:5;stroke-linecap:round;opacity:0}
+.flow.run{opacity:.9;animation:flowRun 1.5s cubic-bezier(.4,0,.25,1) forwards}
+@keyframes flowRun{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0;opacity:0}}
+
+.node{cursor:pointer;transition:opacity .35s}
+.node .hit{fill:transparent}
+.node .shape{fill:#fff;stroke:var(--ink);stroke-width:1.6;transition:fill .25s,stroke .25s,stroke-width .25s}
+.node .ink{fill:var(--ink);transition:fill .25s}
+.node .lbl{font-size:11.5px;fill:var(--ink);paint-order:stroke;stroke:rgba(242,240,236,.82);stroke-width:3.5px;stroke-linejoin:round}
+.node .sub{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;fill:var(--ink-3);paint-order:stroke;stroke:rgba(242,240,236,.8);stroke-width:3px}
+.node:hover .shape{stroke-width:2.4}
+.node:hover .lbl{fill:#000}
+.node.outline{opacity:.3}
+.node.silhouette{opacity:.14}
+.node.lit .shape{stroke:var(--violet)}
+.node.lit .lbl{fill:#2c1a9a}
+.node.focus .shape{stroke:var(--violet);stroke-width:2.8}
+.node.focus .halo{opacity:1}
+.halo{fill:none;stroke:var(--violet);stroke-width:1;opacity:0;transition:opacity .3s}
+.node:focus{outline:none}
+.node:focus-visible .halo{opacity:1;stroke-dasharray:3 3}
+.node.event .shape{stroke-width:2.2}
+.node.ghost{opacity:.5}
+.node.ghost .shape{stroke-dasharray:4 4;fill:rgba(255,255,255,.5)}
+.node.swell .shape{animation:swell .5s cubic-bezier(.22,1,.36,1);transform-box:fill-box;transform-origin:center}
+@keyframes swell{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+.node.morph .shape,.node.morph .ink,.node.morph .bstate{animation:morph .4s cubic-bezier(.22,1,.36,1);transform-box:fill-box;transform-origin:center}
+@keyframes morph{0%{opacity:.2;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}
+.node.enter{animation:nodeIn .5s cubic-bezier(.22,1,.36,1) both}
+@keyframes nodeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.bstate{stroke:var(--ink);stroke-width:2.6;stroke-linecap:round;fill:none;transition:stroke .3s}
+.bstate.failed{stroke:var(--rose)}
+.bstate.unknown{stroke:var(--amber);stroke-dasharray:3 4;stroke-width:2}
+.bstate.late{stroke:var(--amber)}
+.bstate.intact{stroke:var(--teal)}
+.bstate.bypassed{stroke:var(--rose)}
+.satellite{fill:rgba(91,61,245,.13);stroke:var(--violet);stroke-width:1;stroke-dasharray:2 3}
+.evAnchor{fill:#fff;stroke:var(--violet);stroke-width:1.3;cursor:pointer;transition:.2s}
+.evAnchor:hover{fill:var(--violet)}
+.colhead{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;fill:var(--ink-3)}
+.colrule{stroke:rgba(20,20,32,.09);stroke-width:1;stroke-dasharray:2 6}
+.wingtint{fill:rgba(20,20,32,.022)}
+
+/* floating chrome */
+#legend{width:236px}
+#legend .lhead{display:none}
+#legend .lrow{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--ink-2);padding:2.5px 0}
+#legend svg{flex:none}
+#legend .grp{margin-top:8px}
+
+#state{position:relative;display:flex;flex-direction:column;align-self:stretch;
+  width:clamp(232px,22vw,288px);min-width:232px;max-width:288px;flex:none;
+  overflow:hidden;padding:12px 13px;
+  transition:background .2s}
+#state .shead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;padding-bottom:8px;margin-bottom:9px;border-bottom:1px solid var(--line)}
+#state .sbody{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:2px}
+#state h4{margin:0;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;overflow-wrap:anywhere}
+#state .kv b{min-width:0;overflow-wrap:anywhere}
+#stateToggle{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;color:var(--ink-3);font-size:13px;flex:none;transition:transform .3s,background .18s}
+#stateToggle:hover{background:rgba(20,20,32,.07);color:var(--ink)}
+#state.min{width:38px;min-width:38px;max-width:38px;padding:10px 7px;cursor:pointer}
+#state.min:hover{background:rgba(255,255,255,.92)}
+#state.min .sbody{display:none}
+#state.min .shead{flex-direction:column-reverse;gap:10px;border:0;padding:0;margin:0}
+#state.min .shead .kicker{writing-mode:vertical-rl;letter-spacing:.22em}
+#state.min #stateToggle{transform:rotate(180deg)}
+
+#state .role{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+#state .kv{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12px;align-items:baseline}
+#state .kv b{font-weight:500;text-align:right}
+#state .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tbtn{height:27px;padding:0 10px;border-radius:8px;font-size:11.5px;border:1px solid var(--line);background:rgba(255,255,255,.7)}
+.tbtn:hover{background:#fff}
+.tbtn.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+.disc{font-size:11px;line-height:1.5;color:var(--ink-2);margin-top:10px;padding:8px 9px;border-radius:9px;background:rgba(20,20,32,.045)}
+
+#scrub{position:relative;padding:8px 14px 9px;max-width:900px}
+#scrub .top{display:flex;align-items:baseline;gap:10px;margin-bottom:7px;flex-wrap:wrap}
+#scrub .now{font-size:12.5px;font-weight:500}
+#scrub .rail{position:relative;height:26px;display:flex;align-items:center}
+#scrub .track{position:absolute;left:0;right:0;height:3px;border-radius:2px;background:rgba(20,20,32,.12)}
+#scrub .fill{position:absolute;left:0;height:3px;border-radius:2px;background:var(--violet);transition:width .3s cubic-bezier(.22,1,.36,1)}
+#scrub .stops{position:relative;display:flex;justify-content:space-between;width:100%}
+#scrub .stop{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;padding-top:0}
+#scrub .stop i{width:11px;height:11px;border-radius:50%;background:#fff;border:1.6px solid rgba(20,20,32,.3);transition:.25s;display:block}
+#scrub .stop.on i{border-color:var(--violet);background:var(--violet);box-shadow:0 0 0 4px rgba(91,61,245,.16)}
+#scrub .stop.exp i{border-style:dashed}
+#scrub .stop span{position:absolute;top:16px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+#scrub.disabled{opacity:.55;pointer-events:none}
+#scrub .why{font-size:11px;color:var(--ink-2);margin-top:18px;line-height:1.4;text-wrap:pretty}
+
+#gapcard{position:absolute;z-index:34;width:246px;padding:11px 12px;display:none}
+#gapcard .why{font-size:10.5px;line-height:1.45;color:var(--ink-2);margin-bottom:9px;max-height:58px;overflow:auto}
+#gapcard[data-docked]::before{display:none}
+#gapcard[data-docked] .kicker::after{content:" · docked";color:var(--ink-3)}
+#gapcard::before{content:"";position:absolute;left:22px;top:-9px;width:1px;height:9px;background:rgba(91,61,245,.5)}
+#gapcard.leftOf::before{display:none}
+#gapcard.on{display:block;animation:fadeUp .35s cubic-bezier(.22,1,.36,1) both}
+#gapcard .q{font-size:12.5px;line-height:1.45;margin:6px 0 10px}
+
+#source{position:absolute;right:0;top:0;bottom:0;width:min(400px,86vw);z-index:44;transform:translateX(102%);visibility:hidden;pointer-events:none;transition:transform .45s cubic-bezier(.22,1,.36,1),visibility 0s linear .45s;padding:16px 18px;overflow:auto;border-radius:16px 0 0 16px}
+#source.on{transform:none;visibility:visible;pointer-events:auto;transition:transform .45s cubic-bezier(.22,1,.36,1)}
+#source p{font-size:13.5px;line-height:1.75;margin:0 0 12px}
+#source mark{background:transparent;border-bottom:2px solid var(--violet);color:inherit;padding-bottom:1px;transition:background .3s}
+#source mark.hit{background:rgba(91,61,245,.16);border-radius:3px}
+#source .seg{font-size:12px;line-height:1.6;padding:9px 10px;border-radius:10px;background:rgba(13,132,103,.08);border:1px solid rgba(13,132,103,.25);margin-top:6px}
+
+#toolbar{flex:none;padding:5px;display:flex;gap:3px;flex-direction:column;justify-content:center;background:var(--glass);backdrop-filter:blur(18px) saturate(1.5);border:1px solid rgba(255,255,255,.7);box-shadow:var(--shadow);border-radius:var(--r);outline:1px solid var(--line);outline-offset:-1px}
+@media (min-width:901px){#toolbar{flex-direction:row;align-items:center;height:40px}}
+#toolbar button{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:13px;color:var(--ink-2)}
+#toolbar button:hover{background:rgba(20,20,32,.07);color:var(--ink)}
+#toolbar button.on{background:var(--ink);color:#fff}
+
+.wingjump{position:absolute;top:50%;transform:translateY(-50%);z-index:31;display:none;align-items:center;gap:6px;height:32px;padding:0 10px;font-size:15px;color:var(--ink-2)}
+.wingjump span{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase}
+.wingjump.on{display:flex}
+.wingjump:hover{color:var(--ink)}
+#jumpL{left:10px}#jumpR{right:10px}
+#jumpD{left:50%;top:auto;bottom:10px;transform:translateX(-50%)}
+#thin{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:28;width:330px;padding:16px;text-align:center;display:none}
+#thin.on{display:block}
+.pop{position:fixed;z-index:70;width:320px;max-height:calc(100vh - 140px);overflow:auto;padding:14px;display:none}
+.pop.on{display:block;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both}
+.pop h4{margin:0 0 8px;font-size:13px;font-weight:600}
+.pop .prow{display:flex;gap:10px;width:100%;padding:8px;border-radius:9px;font-size:12px;line-height:1.4;border-top:1px dashed var(--line)}
+.pop .prow:hover{background:var(--violet-soft)}
+
+body.rm *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
+@media (max-width:1080px){ #compareBtn,#rmBtn{display:none} }
+@media (max-width:900px){
+  #dock{top:auto;bottom:14px;left:14px;transform:none;flex-direction:row}
+  #dock:hover .nav{width:40px}#dock:hover .nav span{opacity:0}
+  #foot{padding:0 10px 10px 10px;flex-direction:column;gap:6px}
+  #toolbar{flex-direction:row;justify-content:center}
+}
+</style>
+</head>
+<body>
+<div id="atmos"><div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div></div>
+<div id="grain"></div>
+
+<div id="shell">
+  <header id="top">
+    <div class="brand"><div class="mk"></div><b>SIF Sentinel</b></div>
+    <div class="crumb" id="crumb"></div>
+    <div class="hdr-right">
+      <button class="pill" id="reportBtn">Switch report</button>
+      <button class="pill" id="keyBtn">Key</button>
+      <button class="pill" id="compareBtn">Model vs reviewer</button>
+      <button class="pill" id="statesBtn">States</button>
+      <button class="pill" id="rmBtn">Motion</button>
+    </div>
+  </header>
+
+  <div id="body">
+   <div id="stage">
+    <div id="canvasWrap">
+    <div id="canvas"><svg id="g"></svg></div>
+    <div id="overlay"></div>
+
+    <nav id="dock" class="glass glass-ring">
+      <a class="nav" href="index.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 6l6-4 6 4v8H2z"/><path d="M6 14v-4h4v4"/></svg><span>Command Centre</span></a>
+      <a class="nav" href="insights.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13h12"/><path d="M4 11V6M8 11V3M12 11V8"/></svg><span>Insights</span></a>
+      <button class="nav on"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="3.4" cy="8" r="1.7"/><circle cx="12.6" cy="4.6" r="1.7"/><circle cx="12.6" cy="11.4" r="1.7"/><path d="M5 7.2l6-2M5 8.8l6 2"/></svg><span>Evidence graph</span></button>
+      <a class="nav" href="import.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2v8"/><path d="M5 7l3 3 3-3"/><path d="M2.5 13h11"/></svg><span>Import</span></a><a class="nav" href="lab.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.6"/></svg><span>Luck Lab</span></a>
+    </nav>
+
+
+    <button class="wingjump glass glass-ring" id="jumpL" title="Pan to the hazard wing">‹<span>hazards</span></button>
+    <button class="wingjump glass glass-ring" id="jumpR" title="Pan to the receptor"><span>receptor</span>›</button>
+    <button class="wingjump glass glass-ring" id="jumpD" title="Pan down"><span>more below</span>⌄</button>
+    <div id="thin" class="glass glass-ring"></div>
+    <div id="gapcard" class="glass glass-ring"></div>
+    <div id="source" class="glass"></div>
+    </div>
+    <div id="state" class="glass glass-ring">
+      <div class="shead"><span class="kicker">Inspector</span><button id="stateToggle" title="Collapse panel" aria-label="Collapse inspector">›</button></div>
+      <div class="sbody"></div>
+    </div>
+   </div>
+
+   <footer id="foot">
+    <div id="toolbar">
+      <button id="tFit" title="Fit graph">⤢</button>
+      <button id="tIn" title="Zoom in">+</button>
+      <button id="tOut" title="Zoom out">−</button>
+      <button id="tFlow" title="Replay the live path">▷</button>
+      <button id="tCollapse" title="Collapse expansions">◱</button>
+    </div>
+    <div id="scrub" class="glass glass-ring"></div>
+   </footer>
+  </div>
+</div>
+
+<div id="legend" class="pop glass glass-ring"></div>
+<div id="reportPop" class="pop glass glass-ring"></div>
+<div id="statesPop" class="pop glass glass-ring"></div>
+
+<script>
+/* ================= data ================= */
+const PHASES = ["prep","work start","exposure","event","after"];
+
+let REPORT = {
+  id:"RPT-2214", asset:"Rig A", area:"Process deck", activity:"Hot work",
+  narrative:[
+    {t:"Crews were preparing to cut a redundant branch on the ", m:null},
+    {t:"separator vessel", m:"E-VESSEL"},
+    {t:" during the day shift. The permit was raised against the adjacent skid, and the ", m:null},
+    {t:"scope was not amended when the work moved", m:"E-PERMIT"},
+    {t:". A ", m:null},
+    {t:"gas test is referenced but no reading, time or instrument appears in the report", m:"E-GAS"},
+    {t:". On first cut, ", m:null},
+    {t:"a flash was observed inside the vessel", m:"E-EVENT"},
+    {t:" and ", m:null},
+    {t:"two crew standing at the manway withdrew", m:"E-RECEPTOR"},
+    {t:". ", m:null},
+    {t:"Deluge was not activated; the fire self-extinguished", m:"E-FIRE"},
+    {t:". No injuries were reported.", m:null}
+  ]
+};
+
+/* barrier states across the scrub: intact | failed | unknown | late | bypassed | absent */
+let NODES = [
+  {id:"A-RIG", type:"asset", col:0, row:-1.12, label:"Rig A", sub:"asset", ctx:true,
+   detail:"Authorized asset. Opens the fleet graph — the same grammar with report counts on the edges."},
+  {id:"A-DECK", type:"asset", col:2, row:-1.12, label:"Process deck", sub:"location", ctx:true,
+   detail:"Reported location within the asset. Context only — it carries no causal flow."},
+  {id:"ACT", type:"activity", col:1, row:-0.86, label:"Hot work", sub:"activity", ctx:true,
+   detail:"Activity extracted from the task description. Expanding shows every hazard associated with hot work across the corpus as ghost nodes."},
+  {id:"R-HW", type:"rule", col:3.6, row:-1.12, label:"Hot Work", sub:"life-saving rule", ctx:true,
+   detail:"Relevant rule — relevance is not violation. Focus highlights only the nodes that made it relevant."},
+  {id:"R-WA", type:"rule", col:4.35, row:-0.86, label:"Work Authorisation", sub:"life-saving rule", ctx:true,
+   detail:"Relevant rule — relevance is not violation."},
+
+  {id:"H-ATM", type:"hazard", col:0, row:0, label:"Flammable atmosphere", sub:"energy source", support:3,
+   detail:"Hydrocarbon vapour inside the vessel. Supported by the narrative and the gas-test reference."},
+  {id:"H-IGN", type:"hazard", col:0, row:1, label:"Ignition source", sub:"energy source", support:3,
+   detail:"Cutting equipment in use at the joint. Directly described in the source."},
+  {id:"H-PYR", type:"hazard", col:0, row:2, label:"Pyrophoric scale", sub:"energy source", support:1,
+   detail:"Inferred by policy from the service history — not stated in this report."},
+
+  {id:"B-GAS", type:"barrier", col:1, row:0, label:"Gas test", sub:"preventive barrier", support:2,
+   states:{prep:"unknown","work start":"unknown",exposure:"unknown",event:"unknown",after:"late"},
+   gap:{q:"Was the atmosphere tested, and at what time, before the first cut?",
+        why:"A gas test is referenced but no reading, time or instrument appears in any supplied source. Until that is established the barrier state is unknown — it is not 'absent' and not 'failed'."},
+   detail:"Named in the source. No reading, time or instrument is evidenced, so the state stays unknown at every moment before the event."},
+  {id:"B-PERMIT", type:"barrier", col:1, row:1, label:"Permit scope", sub:"preventive barrier", support:3,
+   states:{prep:"intact","work start":"failed",exposure:"failed",event:"failed",after:"failed"},
+   detail:"The permit was raised against the adjacent skid and was not amended when the work moved. Reported as failed from work start."},
+  {id:"B-INERT", type:"barrier", col:1, row:2, label:"Inerting", sub:"preventive barrier", support:1,
+   states:{prep:"unknown","work start":"unknown",exposure:"unknown",event:"unknown",after:"unknown"},
+   gap:{q:"Was the vessel inerted or purged before hot work began?",
+        why:"No purge, inert gas or vessel-preparation step appears anywhere in the supplied source."},
+   detail:"No evidence located in the source. Drawn as a hole, not as an absent barrier."},
+
+  {id:"EVENT", type:"event", col:2, row:1, label:"Ignition in vessel", sub:"loss of control", support:3,
+   detail:"The reported loss of control. Both wings are read from this node: what could have started it on the left, what it could have become on the right."},
+
+  {id:"B-DET", type:"barrier", col:3, row:0, label:"Gas detection alarm", sub:"recovery barrier", support:2,
+   states:{prep:"unknown","work start":"unknown",exposure:"unknown",event:"late",after:"late"},
+   detail:"Alarm activation is described after the flash. A barrier that only exists after the event is drawn behind it."},
+  {id:"B-ER", type:"barrier", col:3, row:1.6, label:"Emergency response", sub:"recovery barrier", support:3,
+   states:{prep:"intact","work start":"intact",exposure:"intact",event:"intact",after:"intact"},
+   detail:"Muster and response described and evidenced. Reported as implemented throughout."},
+
+  {id:"C-FIRE", type:"consequence", col:4, row:0.6, label:"Flash fire", sub:"credible consequence", support:3,
+   detail:"Described in the source. This is the consequence the reported path actually reached."},
+  {id:"C-OVER", type:"consequence", col:4, row:2, label:"Vessel overpressure", sub:"credible consequence", support:1,
+   detail:"Credible from the mechanism but not reported. Drawn thin: no evidence places it on this path."},
+
+  {id:"RECEPTOR", type:"receptor", col:5, row:0.6, label:"2 crew at the manway", sub:"receptor · reported exposed", support:3,
+   detail:"The people the source places within the exposure area. Only paths that reached a person are shown when this node is focused."},
+  {id:"OUTCOME", type:"outcome", col:2, row:2.45, label:"Reported outcome: no injury", sub:"outcome", ctx:true,
+   detail:"The reported outcome is recorded separately from the credible consequences. A no-injury outcome does not weaken the mechanism."}
+];
+
+let EDGES = [
+  {from:"H-ATM", to:"EVENT", via:"B-GAS", kind:"causal", support:3, live:true},
+  {from:"H-IGN", to:"EVENT", via:"B-PERMIT", kind:"causal", support:3, live:true},
+  {from:"H-PYR", to:"EVENT", via:"B-INERT", kind:"inferred", support:1, label:"policy inference"},
+  {from:"EVENT", to:"C-FIRE", via:"B-DET", kind:"causal", support:3, live:true},
+  {from:"EVENT", to:"C-OVER", via:"B-ER", kind:"causal", support:1},
+  {from:"C-FIRE", to:"RECEPTOR", kind:"causal", support:3, live:true},
+  {from:"A-RIG", to:"H-ATM", kind:"context"},
+  {from:"A-DECK", to:"EVENT", kind:"context"},
+  {from:"ACT", to:"EVENT", kind:"context"},
+  {from:"R-HW", to:"EVENT", kind:"context"},
+  {from:"R-WA", to:"B-PERMIT", kind:"context"},
+  {from:"EVENT", to:"OUTCOME", kind:"context"}
+];
+
+let EVIDENCE = [
+  {id:"E-GAS", on:"B-GAS", quote:"gas test is referenced but no reading, time or instrument appears"},
+  {id:"E-PERMIT", on:"B-PERMIT", quote:"scope was not amended when the work moved"},
+  {id:"E-EVENT", on:"EVENT", quote:"a flash was observed inside the vessel"},
+  {id:"E-RECEPTOR", on:"RECEPTOR", quote:"two crew standing at the manway withdrew"},
+  {id:"E-FIRE", on:"C-FIRE", quote:"Deluge was not activated; the fire self-extinguished"},
+  {id:"E-VESSEL", on:"H-ATM", quote:"separator vessel"}
+];
+
+/* second opinion: model said one thing, reviewer another */
+let DISAGREE = {"B-GAS":{model:"absent", reviewer:"unknown", reason:"narrative does not establish absence"}};
+
+/* fleet-scale graph, identical grammar */
+const FLEET = {
+  nodes:[
+    {id:"F-PRES", type:"hazard", col:0, row:0, label:"Stored pressure", sub:"energy source · 41 reports", support:3, detail:"Aggregated across the authorized fleet. Counts are distinct reports."},
+    {id:"F-ELEC", type:"hazard", col:0, row:1, label:"Electrical energy", sub:"energy source · 33 reports", support:3, detail:"Aggregated hazard across the fleet."},
+    {id:"F-SUS", type:"hazard", col:0, row:2, label:"Suspended load", sub:"energy source · 27 reports", support:2, detail:"Aggregated hazard across the fleet."},
+    {id:"F-ISO", type:"barrier", col:1, row:0, label:"Isolation", sub:"barrier · not verified in 14", support:3, states:{prep:"unknown","work start":"unknown",exposure:"unknown",event:"unknown",after:"unknown"}, detail:"Isolation named but verification not evidenced in 14 of 41 reports."},
+    {id:"F-PERM", type:"barrier", col:1, row:1, label:"Permit control", sub:"barrier · failed in 9", support:3, states:{prep:"intact","work start":"failed",exposure:"failed",event:"failed",after:"failed"}, detail:"Reported as failed in 9 distinct reports."},
+    {id:"F-EXCL", type:"barrier", col:1, row:2, label:"Exclusion zone", sub:"barrier · after event in 11", support:2, states:{prep:"unknown","work start":"unknown",exposure:"unknown",event:"late",after:"late"}, detail:"Established only after the load movement in 11 distinct reports."},
+    {id:"F-EVENT", type:"event", col:2, row:1, label:"Loss of control", sub:"101 distinct reports", support:3, detail:"Every report in the current filter that reached a loss-of-control description."},
+    {id:"F-ER", type:"barrier", col:3, row:1, label:"Emergency response", sub:"recovery · evidenced in 62", support:3, states:{prep:"intact","work start":"intact",exposure:"intact",event:"intact",after:"intact"}, detail:"Response described and evidenced in 62 reports."},
+    {id:"F-ELEC-C", type:"consequence", col:4, row:0.4, label:"Electrocution", sub:"credible · 7 reports", support:2, detail:"Credible consequence recorded in 7 distinct reports."},
+    {id:"F-FIRE", type:"consequence", col:4, row:1.6, label:"Fire or flash", sub:"credible · 18 reports", support:3, detail:"Credible consequence recorded in 18 distinct reports."},
+    {id:"F-PPL", type:"receptor", col:5, row:1, label:"Person in exposure area", sub:"receptor · 44 reports", support:3, detail:"Reports that place a person inside the exposure area."},
+    {id:"F-A", type:"asset", col:0, row:-1.3, label:"Rig A · Rig C · Rig F", sub:"assets in view", ctx:true, detail:"Assets contributing to this aggregate. Click a single asset to return to its report graph."}
+  ],
+  edges:[
+    {from:"F-PRES", to:"F-EVENT", via:"F-ISO", kind:"causal", support:3, live:true, label:"14 reports"},
+    {from:"F-ELEC", to:"F-EVENT", via:"F-PERM", kind:"causal", support:3, label:"9 reports"},
+    {from:"F-SUS", to:"F-EVENT", via:"F-EXCL", kind:"causal", support:2, label:"11 reports"},
+    {from:"F-EVENT", to:"F-ELEC-C", kind:"causal", support:2, label:"7 reports"},
+    {from:"F-EVENT", to:"F-FIRE", via:"F-ER", kind:"causal", support:3, live:true, label:"18 reports"},
+    {from:"F-FIRE", to:"F-PPL", kind:"causal", support:3, live:true, label:"44 reports"},
+    {from:"F-A", to:"F-PRES", kind:"context"}
+  ]
+};
+
+/* one ring of neighbours per node, from the wider knowledge graph */
+let RING = {
+  "ACT":[{label:"Confined space", type:"hazard"},{label:"Manual handling", type:"hazard"},{label:"Dropped object", type:"hazard"}],
+  "H-ATM":[{label:"Purge records", type:"barrier"},{label:"Draining", type:"barrier"}],
+  "B-GAS":[{label:"Detector calibration", type:"barrier"},{label:"Competency", type:"barrier"}],
+  "EVENT":[{label:"6 similar events", type:"event"},{label:"Vessel entry", type:"activity"}],
+  "C-FIRE":[{label:"Escalation to deck", type:"consequence"}],
+  "RECEPTOR":[{label:"Adjacent crew", type:"receptor"}]
+};
+
+
+/* ================= case registry ================= */
+const CASES = {
+  "RPT-2214": {meta:REPORT, nodes:NODES, edges:EDGES, evidence:EVIDENCE, disagree:DISAGREE, ring:RING},
+
+  "RPT-2140": {
+    meta:{id:"RPT-2140", asset:"Moran", area:"Pipeline right of way", activity:"Vehicle movement",
+      narrative:[
+        {t:"A tipper was repositioning at the ", m:null},
+        {t:"pipeline right of way while a three-person crew worked at the trench", m:"E2-CREW"},
+        {t:". ", m:null},
+        {t:"No spotter or banksman was posted for the manoeuvre", m:"E2-SPOT"},
+        {t:". The ", m:null},
+        {t:"segregation barrier had been moved earlier in the shift and not reinstated", m:"E2-SEG"},
+        {t:". ", m:null},
+        {t:"The vehicle reversed to within a metre of the crew before a worker shouted", m:"E2-EVENT"},
+        {t:". The driver stopped; no contact occurred and no injuries were reported."}
+      ]},
+    nodes:[
+      {id:"A2", type:"asset", col:0, row:-1.12, label:"Moran", sub:"asset", ctx:true, detail:"Authorized asset. Opens the fleet graph."},
+      {id:"ACT2", type:"activity", col:1, row:-0.86, label:"Vehicle movement", sub:"activity", ctx:true, detail:"Activity extracted from the task description."},
+      {id:"R2", type:"rule", col:3.8, row:-1.12, label:"Vehicle Safety", sub:"life-saving rule", ctx:true, detail:"Relevant rule — relevance is not violation."},
+      {id:"H2-PLANT", type:"hazard", col:0, row:0, label:"Mobile plant", sub:"energy source", support:3, detail:"A loaded tipper manoeuvring in a shared work area. Directly described."},
+      {id:"H2-VIS", type:"hazard", col:0, row:1.2, label:"Restricted visibility", sub:"energy source", support:2, detail:"Reversing with the trench behind the vehicle; supported by the described geometry."},
+      {id:"B2-SPOT", type:"barrier", col:1, row:0, label:"Spotter", sub:"preventive barrier", support:3,
+        states:{prep:"absent","work start":"absent",exposure:"absent",event:"absent",after:"intact"},
+        detail:"No spotter is described at any point before the manoeuvre. Reported absent, not unknown — the source states it."},
+      {id:"B2-SEG", type:"barrier", col:1, row:1.2, label:"Segregation barrier", sub:"preventive barrier", support:3,
+        states:{prep:"intact","work start":"failed",exposure:"failed",event:"failed",after:"failed"},
+        detail:"Moved earlier in the shift and not reinstated."},
+      {id:"B2-ALARM", type:"barrier", col:1, row:2.3, label:"Reversing alarm", sub:"preventive barrier", support:1,
+        states:{prep:"unknown","work start":"unknown",exposure:"unknown",event:"unknown",after:"unknown"},
+        gap:{q:"Was the reversing alarm audible and working at the time of the manoeuvre?",
+             why:"The alarm is not mentioned in the narrative. Its state cannot be read as working or failed."},
+        detail:"Not mentioned in the source. Drawn as a hole rather than assumed present."},
+      {id:"EV2", type:"event", col:2, row:1, label:"Vehicle enters crew work area", sub:"loss of control", support:3,
+        detail:"The reported loss of control: the vehicle crossed into the area occupied by the crew."},
+      {id:"B2-STOP", type:"barrier", col:3, row:1, label:"Verbal stop", sub:"recovery barrier", support:3,
+        states:{prep:"unknown","work start":"unknown",exposure:"intact",event:"intact",after:"intact"},
+        detail:"A worker shouted and the driver stopped. Reported as effective, evidenced in the narrative."},
+      {id:"C2-CRUSH", type:"consequence", col:4, row:0.5, label:"Crush injury", sub:"credible consequence", support:3, detail:"Credible from the described geometry and vehicle mass."},
+      {id:"C2-TRENCH", type:"consequence", col:4, row:1.8, label:"Trench collapse", sub:"credible consequence", support:1, detail:"Credible if the vehicle had reached the trench edge. Not reported."},
+      {id:"RCPT2", type:"receptor", col:5, row:0.5, label:"3-person trench crew", sub:"receptor · reported exposed", support:3, detail:"The people the source places inside the swept path."},
+      {id:"OUT2", type:"outcome", col:2, row:2.45, label:"Reported outcome: no contact", sub:"outcome", ctx:true, detail:"The outcome is recorded separately from the credible consequences. No contact does not weaken the mechanism."}
+    ],
+    edges:[
+      {from:"H2-PLANT", to:"EV2", via:"B2-SPOT", kind:"causal", support:3, live:true},
+      {from:"H2-VIS", to:"EV2", via:"B2-SEG", kind:"causal", support:3, live:true},
+      {from:"H2-PLANT", to:"EV2", via:"B2-ALARM", kind:"inferred", support:1},
+      {from:"EV2", to:"C2-CRUSH", via:"B2-STOP", kind:"causal", support:3, live:true},
+      {from:"EV2", to:"C2-TRENCH", kind:"causal", support:1},
+      {from:"C2-CRUSH", to:"RCPT2", kind:"causal", support:3, live:true},
+      {from:"A2", to:"H2-PLANT", kind:"context"},
+      {from:"ACT2", to:"EV2", kind:"context"},
+      {from:"R2", to:"EV2", kind:"context"},
+      {from:"EV2", to:"OUT2", kind:"context"}
+    ],
+    evidence:[
+      {id:"E2-SPOT", on:"B2-SPOT", quote:"No spotter or banksman was posted for the manoeuvre"},
+      {id:"E2-SEG", on:"B2-SEG", quote:"segregation barrier had been moved earlier in the shift and not reinstated"},
+      {id:"E2-EVENT", on:"EV2", quote:"The vehicle reversed to within a metre of the crew before a worker shouted"},
+      {id:"E2-CREW", on:"RCPT2", quote:"pipeline right of way while a three-person crew worked at the trench"}
+    ],
+    disagree:{"B2-SPOT":{model:"unknown", reviewer:"absent", reason:"the narrative states no spotter was posted"}},
+    ring:{"ACT2":[{label:"Reversing manoeuvres", type:"hazard"},{label:"Laydown traffic", type:"hazard"}],
+          "B2-SPOT":[{label:"Banksman competency", type:"barrier"}],
+          "EV2":[{label:"9 similar events", type:"event"}]}
+  },
+
+  "RPT-2189": {
+    meta:{id:"RPT-2189", asset:"Naharkatiya", area:"Wellhead switchroom", activity:"Maintenance",
+      narrative:[
+        {t:"A technician attended a ", m:null},
+        {t:"motor starter fault in the wellhead switchroom", m:"E3-TASK"},
+        {t:". An ", m:null},
+        {t:"isolation certificate is referenced in the report", m:"E3-ISO"},
+        {t:", but ", m:null},
+        {t:"no verification or test-for-dead step is described", m:"E3-VERIFY"},
+        {t:". ", m:null},
+        {t:"The panel was opened and the fault was cleared without incident", m:"E3-EVENT"},
+        {t:". The permit was closed in the same shift."}
+      ]},
+    nodes:[
+      {id:"A3", type:"asset", col:0, row:-1.12, label:"Naharkatiya", sub:"asset", ctx:true, detail:"Authorized asset. Opens the fleet graph."},
+      {id:"ACT3", type:"activity", col:1, row:-0.86, label:"Maintenance", sub:"activity", ctx:true, detail:"Activity extracted from the task description."},
+      {id:"R3", type:"rule", col:3.8, row:-1.12, label:"Energy Isolation", sub:"life-saving rule", ctx:true, detail:"Relevant rule — relevance is not violation."},
+      {id:"H3-ELEC", type:"hazard", col:0, row:0.2, label:"Electrical energy", sub:"energy source", support:3, detail:"A live motor starter circuit. Directly described."},
+      {id:"H3-STORED", type:"hazard", col:0, row:1.4, label:"Stored energy", sub:"energy source", support:1, detail:"Capacitive stored energy inferred by policy for this equipment class — not stated in the report."},
+      {id:"B3-ISO", type:"barrier", col:1, row:0.2, label:"Isolation", sub:"preventive barrier", support:3,
+        states:{prep:"intact","work start":"intact",exposure:"intact",event:"intact",after:"intact"},
+        detail:"An isolation certificate is referenced and attached. The isolation itself is evidenced."},
+      {id:"B3-VER", type:"barrier", col:1, row:1.4, label:"Test for dead", sub:"preventive barrier", support:2,
+        states:{prep:"unknown","work start":"unknown",exposure:"unknown",event:"unknown",after:"unknown"},
+        gap:{q:"Was the circuit proved dead, by whom, and with what instrument?",
+             why:"Isolation is evidenced but verification is not described anywhere in the source. Isolation named is not isolation verified."},
+        detail:"No verification step appears in the source. The state stays unknown at every moment."},
+      {id:"EV3", type:"event", col:2, row:0.8, label:"Contact with live conductor", sub:"loss of control · candidate", support:2,
+        detail:"A candidate loss of control: it did not occur, but the evidence does not establish that it could not have."},
+      {id:"B3-PPE", type:"barrier", col:3, row:0.8, label:"Arc-rated protection", sub:"recovery barrier", support:2,
+        states:{prep:"intact","work start":"intact",exposure:"intact",event:"intact",after:"intact"},
+        detail:"Arc-rated clothing described as worn."},
+      {id:"C3-SHOCK", type:"consequence", col:4, row:0.2, label:"Electric shock", sub:"credible consequence", support:2, detail:"Credible from the energy source and the task."},
+      {id:"C3-ARC", type:"consequence", col:4, row:1.5, label:"Arc flash", sub:"credible consequence", support:1, detail:"Credible for this equipment class. Not reported."},
+      {id:"RCPT3", type:"receptor", col:5, row:0.2, label:"1 technician", sub:"receptor · reported exposed", support:3, detail:"The person the source places at the open panel."},
+      {id:"OUT3", type:"outcome", col:2, row:2.3, label:"Reported outcome: fault cleared, no injury", sub:"outcome", ctx:true, detail:"A clean outcome does not establish that the verification step happened."}
+    ],
+    edges:[
+      {from:"H3-ELEC", to:"EV3", via:"B3-ISO", kind:"causal", support:3, live:true},
+      {from:"H3-ELEC", to:"EV3", via:"B3-VER", kind:"causal", support:2, live:true},
+      {from:"H3-STORED", to:"EV3", kind:"inferred", support:1},
+      {from:"EV3", to:"C3-SHOCK", via:"B3-PPE", kind:"causal", support:2, live:true},
+      {from:"EV3", to:"C3-ARC", kind:"causal", support:1},
+      {from:"C3-SHOCK", to:"RCPT3", kind:"causal", support:2, live:true},
+      {from:"A3", to:"H3-ELEC", kind:"context"},
+      {from:"ACT3", to:"EV3", kind:"context"},
+      {from:"R3", to:"EV3", kind:"context"},
+      {from:"EV3", to:"OUT3", kind:"context"}
+    ],
+    evidence:[
+      {id:"E3-ISO", on:"B3-ISO", quote:"isolation certificate is referenced in the report"},
+      {id:"E3-VERIFY", on:"B3-VER", quote:"no verification or test-for-dead step is described"},
+      {id:"E3-EVENT", on:"EV3", quote:"The panel was opened and the fault was cleared without incident"},
+      {id:"E3-TASK", on:"H3-ELEC", quote:"motor starter fault in the wellhead switchroom"}
+    ],
+    disagree:{"B3-VER":{model:"absent", reviewer:"unknown", reason:"narrative does not establish absence"}},
+    ring:{"B3-VER":[{label:"Proving unit checks", type:"barrier"},{label:"Competency record", type:"barrier"}],
+          "ACT3":[{label:"Panel entry", type:"activity"}],
+          "EV3":[{label:"14 similar patterns", type:"event"}]}
+  },
+
+  "RPT-2104": {
+    meta:{id:"RPT-2104", asset:"Block SY-03", area:"Main deck", activity:"Personnel transfer",
+      narrative:[
+        {t:"A personnel basket transfer to the supply vessel continued after the ", m:null},
+        {t:"recorded wind speed exceeded the stated transfer limit", m:"E4-WIND"},
+        {t:". The ", m:null},
+        {t:"transfer procedure requires a stop at the limit; no stop is described", m:"E4-PROC"},
+        {t:". ", m:null},
+        {t:"Three persons were in the basket when it swung against the vessel rail", m:"E4-EVENT"},
+        {t:". ", m:null},
+        {t:"Harnesses were reported worn; anchor arrangement is not described", m:"E4-HARNESS"},
+        {t:". The transfer was completed and the crew reported no injuries."}
+      ]},
+    nodes:[
+      {id:"A4", type:"asset", col:0, row:-1.12, label:"Block SY-03", sub:"asset", ctx:true, detail:"Authorized offshore asset. Opens the fleet graph."},
+      {id:"ACT4", type:"activity", col:1, row:-0.86, label:"Personnel transfer", sub:"activity", ctx:true, detail:"Activity extracted from the task description."},
+      {id:"R4", type:"rule", col:3.8, row:-1.12, label:"Working at Height", sub:"life-saving rule", ctx:true, detail:"Relevant rule — relevance is not violation."},
+      {id:"H4-HEIGHT", type:"hazard", col:0, row:0.2, label:"Fall from height", sub:"energy source", support:3, detail:"Suspended personnel basket over water and deck. Directly described."},
+      {id:"H4-WIND", type:"hazard", col:0, row:1.5, label:"Environmental limit exceeded", sub:"energy source", support:3, detail:"Recorded wind speed above the stated transfer limit."},
+      {id:"B4-LIMIT", type:"barrier", col:1, row:0.2, label:"Wind-limit stop", sub:"preventive barrier", support:3,
+        states:{prep:"intact","work start":"intact",exposure:"failed",event:"failed",after:"failed"},
+        detail:"The procedure requires a stop at the limit. No stop is described — reported as failed from the moment the limit was passed."},
+      {id:"B4-ARREST", type:"barrier", col:1, row:1.5, label:"Fall arrest", sub:"preventive barrier", support:2,
+        states:{prep:"unknown","work start":"unknown",exposure:"unknown",event:"unknown",after:"unknown"},
+        gap:{q:"What were the harnesses attached to during the transfer?",
+             why:"Harnesses are reported worn, but no anchor point or arrangement is described. Worn is not attached."},
+        detail:"Worn but unattached is indistinguishable from worn and attached in this source, so the state stays unknown."},
+      {id:"EV4", type:"event", col:2, row:0.9, label:"Uncontrolled basket movement", sub:"loss of control", support:3,
+        detail:"The reported loss of control: the basket swung against the vessel rail with persons aboard."},
+      {id:"B4-RESCUE", type:"barrier", col:3, row:0.4, label:"Man-overboard response", sub:"recovery barrier", support:2,
+        states:{prep:"intact","work start":"intact",exposure:"intact",event:"intact",after:"intact"},
+        detail:"Standby vessel on station throughout, described in the source."},
+      {id:"B4-BRIEF", type:"barrier", col:3, row:1.8, label:"Transfer brief", sub:"recovery barrier", support:1,
+        states:{prep:"unknown","work start":"unknown",exposure:"unknown",event:"late",after:"late"},
+        detail:"A re-brief is described after the transfer. A barrier that only exists after the event is drawn behind it."},
+      {id:"C4-FALL", type:"consequence", col:4, row:0.3, label:"Fall to sea", sub:"credible consequence", support:3, detail:"Credible from the described geometry and the failed limit."},
+      {id:"C4-CRUSH", type:"consequence", col:4, row:1.6, label:"Crush against rail", sub:"credible consequence", support:3, detail:"Described contact with the vessel rail."},
+      {id:"RCPT4", type:"receptor", col:5, row:0.9, label:"3 persons in basket", sub:"receptor · reported exposed", support:3, detail:"The people the source places in the basket during the transfer."},
+      {id:"OUT4", type:"outcome", col:2, row:2.35, label:"Reported outcome: transfer completed, no injury", sub:"outcome", ctx:true, detail:"Completion without injury does not establish that the limit control worked."}
+    ],
+    edges:[
+      {from:"H4-HEIGHT", to:"EV4", via:"B4-ARREST", kind:"causal", support:2, live:true},
+      {from:"H4-WIND", to:"EV4", via:"B4-LIMIT", kind:"causal", support:3, live:true},
+      {from:"EV4", to:"C4-FALL", via:"B4-RESCUE", kind:"causal", support:3, live:true},
+      {from:"EV4", to:"C4-CRUSH", via:"B4-BRIEF", kind:"causal", support:3},
+      {from:"C4-FALL", to:"RCPT4", kind:"causal", support:3, live:true},
+      {from:"A4", to:"H4-HEIGHT", kind:"context"},
+      {from:"ACT4", to:"EV4", kind:"context"},
+      {from:"R4", to:"EV4", kind:"context"},
+      {from:"EV4", to:"OUT4", kind:"context"}
+    ],
+    evidence:[
+      {id:"E4-WIND", on:"H4-WIND", quote:"recorded wind speed exceeded the stated transfer limit"},
+      {id:"E4-PROC", on:"B4-LIMIT", quote:"transfer procedure requires a stop at the limit; no stop is described"},
+      {id:"E4-EVENT", on:"EV4", quote:"Three persons were in the basket when it swung against the vessel rail"},
+      {id:"E4-HARNESS", on:"B4-ARREST", quote:"Harnesses were reported worn; anchor arrangement is not described"}
+    ],
+    disagree:{},
+    ring:{"B4-LIMIT":[{label:"Limit authority", type:"barrier"},{label:"Weather log", type:"barrier"}],
+          "ACT4":[{label:"Crane transfers", type:"activity"}],
+          "RCPT4":[{label:"Deck crew", type:"receptor"}]}
+  }
+};
+
+const REPORT_ALIASES = {
+  "OIL-2025-0147": "RPT-2104",
+  "OIL-2025-0163": "RPT-2189",
+  "OIL-2025-0178": "RPT-2214",
+  "OIL-2025-0191": "RPT-2214",
+  "OIL-2025-0203": "RPT-2140",
+  "OIL-2025-0215": "RPT-2189",
+  "OIL-2025-0228": "RPT-2189",
+  "OIL-2025-0234": "RPT-2140",
+  "OIL-2025-0247": "RPT-2189",
+  "OIL-2025-0259": "RPT-2104",
+};
+
+const CASE_LIST = [
+  {id:"RPT-2214", site:"Naharkatiya / Rig", line:"Hot work · lifting & ignition in vessel", flag:"2 unresolved barriers"},
+  {id:"RPT-2140", site:"Moran / Jorhat", line:"Vehicle movement · crew in swept path", flag:"1 unresolved barrier"},
+  {id:"RPT-2189", site:"Duliajan / Geleki", line:"Maintenance · electrical & pressure isolation", flag:"1 unresolved barrier"},
+  {id:"RPT-2104", site:"Rupsi / Block SY", line:"Working at height · wind limit & fall arrest", flag:"1 unresolved barrier"}
+];
+
+function loadCase(id){
+  let targetId = id;
+  if (REPORT_ALIASES[id]) targetId = REPORT_ALIASES[id];
+  const c = CASES[targetId] || CASES["RPT-2214"];
+  S.caseId = targetId;
+  REPORT = JSON.parse(JSON.stringify(c.meta));
+  if (id && id !== targetId) REPORT.id = id;
+  NODES = c.nodes; EDGES = c.edges; EVIDENCE = c.evidence; DISAGREE = c.disagree || {}; RING = c.ring || {};
+  S.scale = "report"; S.focus = null; S.rep = null; S.answered = {}; S.stale = new Set();
+  S.expanded.clear(); ghostNodes = []; ghostEdges = []; S.thin = "full"; S.phase = 2;
+  $("#source").classList.remove("on");
+  try { history.replaceState(null, "", location.pathname + "?report=" + id); } catch(e){}
+  renderCrumb(); build(); renderScrub(); fit(false); setTimeout(replayFlow, 420);
+}
+
+const THIN_STATES = {
+  full:null,
+  nohazard:{t:"No hazard extracted", b:"The source does not name an energy source, so the left wing has no geometry. The event node stands alone — nothing is inferred from keywords."},
+  failed:{t:"Analysis failed", b:"Extraction did not complete for this report: the attachment could not be read. No graph is drawn, and this is not a finding of “no hazard”."},
+  notiming:{t:"Timing unsupported", b:"No moment can be placed on any barrier, so the scrubber is disabled and barriers sit unplaced above the wing rather than on the edges they would guard."},
+  minor:{t:"Nothing serious reported", b:"One thin supported edge, a small event node and no receptor reached. Thin geometry is the honest rendering of thin evidence."}
+};
+
+/* ================= state ================= */
+const S = {
+  caseId:"RPT-2214", scale:"report", phase:2, focus:null, expanded:new Set(), compare:false,
+  thin:"full", answered:{}, stale:new Set(), pinnedEvidence:null
+};
+let T = {k:1, x:0, y:0};
+
+const $ = s => document.querySelector(s);
+const SVGNS = "http://www.w3.org/2000/svg";
+const mk = (t,a={}) => { const e = document.createElementNS(SVGNS,t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+const G = () => S.scale === "fleet" ? FLEET : {nodes:NODES, edges:EDGES};
+const nodeById = id => G().nodes.find(n=>n.id===id) || ghostNodes.find(n=>n.id===id);
+const phaseName = () => PHASES[S.phase];
+const bstate = n => {
+  if (!n.states) return null;
+  if (S.answered[n.id]) return S.answered[n.id];
+  return n.states[phaseName()];
+};
+const STATE_WORD = {intact:"implemented and evidenced", failed:"reported failed", unknown:"state unknown", late:"implemented after the event", bypassed:"reported bypassed", absent:"reported absent"};
+const SUPPORT_WORD = {3:"strongly supported", 2:"supported", 1:"weakly supported"};
+const ROLE_WORD = {hazard:"hazard", barrier:"barrier", event:"loss-of-control event", consequence:"credible consequence", receptor:"receptor", outcome:"reported outcome", activity:"activity", asset:"asset", rule:"life-saving rule"};
+
+let ghostNodes = [], ghostEdges = [];
+
+/* ================= layout ================= */
+const CW = 214, RH = 96, X0 = 120, Y0 = 210;
+let VERT = false;
+function pos(col, row){
+  return VERT ? [Y0 + row*150, 110 + col*150] : [X0 + col*CW, Y0 + row*RH];
+}
+function nodePos(n){ return pos(n.col, n.row); }
+
+/* ================= glyphs ================= */
+function glyph(type, size){
+  const g = mk("g");
+  const s = size || 1;
+  if (type === "hazard"){
+    g.appendChild(mk("circle",{class:"shape", r:15*s}));
+    g.appendChild(mk("circle",{class:"ink", r:5.5*s}));
+  } else if (type === "event"){
+    g.appendChild(mk("path",{class:"shape", d:`M0 ${-30*s}L${30*s} 0L0 ${30*s}L${-30*s} 0Z`}));
+    g.appendChild(mk("path",{class:"ink", d:`M0 ${-11*s}L${11*s} 0L0 ${11*s}L${-11*s} 0Z`}));
+  } else if (type === "consequence"){
+    g.appendChild(mk("path",{class:"shape", d:`M0 ${-16*s}L${15*s} ${12*s}L${-15*s} ${12*s}Z`}));
+  } else if (type === "receptor"){
+    g.appendChild(mk("circle",{class:"shape", r:15*s}));
+    g.appendChild(mk("circle",{class:"ink", r:9*s}));
+    g.appendChild(mk("circle",{class:"shape", r:4*s, style:"fill:#fff;stroke:none"}));
+  } else if (type === "outcome"){
+    g.appendChild(mk("circle",{class:"shape", r:12*s, style:"stroke-dasharray:none"}));
+  } else if (type === "activity"){
+    g.appendChild(mk("path",{class:"shape", d:`M0 ${-14*s}L${13*s} ${10*s}L${-13*s} ${10*s}Z`}));
+  } else if (type === "asset"){
+    g.appendChild(mk("path",{class:"shape", d:hexPath(14*s)}));
+  } else if (type === "rule"){
+    g.appendChild(mk("path",{class:"shape", d:pentPath(13*s)}));
+    g.appendChild(mk("path",{class:"ink", d:pentPath(6*s)}));
+  } else if (type === "barrier"){
+    g.appendChild(mk("g",{class:"barrierGlyph"}));
+  }
+  return g;
+}
+function hexPath(r){
+  let d = "";
+  for (let i=0;i<6;i++){ const a = Math.PI/180*(60*i-30); d += (i?"L":"M") + (r*Math.cos(a)).toFixed(2) + " " + (r*Math.sin(a)).toFixed(2); }
+  return d + "Z";
+}
+function pentPath(r){
+  let d = "";
+  for (let i=0;i<5;i++){ const a = Math.PI/180*(72*i-90); d += (i?"L":"M") + (r*Math.cos(a)).toFixed(2) + " " + (r*Math.sin(a)).toFixed(2); }
+  return d + "Z";
+}
+/* the barrier glyph IS its state */
+function barrierGlyph(state){
+  const g = mk("g");
+  const H = 17;
+  if (state === "intact"){
+    g.appendChild(mk("line",{class:"bstate intact", x1:0, y1:-H, x2:0, y2:H}));
+    g.appendChild(mk("line",{class:"bstate intact", x1:-6, y1:-H, x2:6, y2:-H}));
+    g.appendChild(mk("line",{class:"bstate intact", x1:-6, y1:H, x2:6, y2:H}));
+  } else if (state === "failed"){
+    g.appendChild(mk("line",{class:"bstate failed", x1:-5, y1:-H, x2:-5, y2:-3}));
+    g.appendChild(mk("line",{class:"bstate failed", x1:5, y1:3, x2:5, y2:H}));
+    g.appendChild(mk("line",{class:"bstate failed", x1:-9, y1:-1, x2:9, y2:1, style:"stroke-width:1.4;opacity:.7"}));
+  } else if (state === "unknown"){
+    g.appendChild(mk("circle",{class:"bstate unknown", r:11}));
+  } else if (state === "late"){
+    g.appendChild(mk("line",{class:"bstate late", x1:0, y1:-H+3, x2:0, y2:H-3, style:"stroke-dasharray:5 4"}));
+    g.appendChild(mk("path",{class:"bstate late", d:"M-8 -19 A 9 9 0 0 1 8 -19", style:"stroke-width:1.5;fill:none"}));
+    g.appendChild(mk("line",{class:"bstate late", x1:0, y1:-19, x2:5, y2:-22, style:"stroke-width:1.5"}));
+  } else if (state === "bypassed"){
+    g.appendChild(mk("line",{class:"bstate bypassed", x1:0, y1:-H, x2:0, y2:H}));
+    g.appendChild(mk("path",{class:"bstate bypassed", d:"M-13 10 Q0 -14 13 10", style:"stroke-width:1.6"}));
+  } else {
+    g.appendChild(mk("line",{class:"bstate", x1:0, y1:-H, x2:0, y2:H, style:"stroke-dasharray:2 5;opacity:.5"}));
+  }
+  return g;
+}
+
+/* ================= edge geometry ================= */
+function edgePath(a, b){
+  const [x1,y1] = a, [x2,y2] = b;
+  if (VERT){
+    const my = (y1+y2)/2;
+    return `M${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`;
+  }
+  const mx = (x1+x2)/2;
+  return `M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+}
+function anchorOut(n){
+  const [x,y] = nodePos(n);
+  return VERT ? [x, y+22] : [x+22, y];
+}
+function anchorIn(n){
+  const [x,y] = nodePos(n);
+  return VERT ? [x, y-22] : [x-22, y];
+}
+const SW = {1:1.4, 2:2.6, 3:4};
+
+/* ================= render ================= */
+const svg = $("#g");
+let root, layers = {};
+
+function build(){
+  svg.innerHTML = "";
+  root = mk("g",{id:"root"});
+  svg.appendChild(root);
+  layers = {};
+  ["cols","tint","edges","flow","nodes","anchors"].forEach(k => { layers[k] = mk("g",{class:"L-"+k}); root.appendChild(layers[k]); });
+
+  if (S.thin !== "full") { renderThin(); return; }
+  $("#thin").classList.remove("on");
+
+  const g = G();
+  const nodes = g.nodes.concat(ghostNodes);
+  const edges = g.edges.concat(ghostEdges);
+
+  drawColumns();
+  edges.forEach((e,i) => drawEdge(e, i));
+  nodes.forEach((n,i) => drawNode(n, i));
+  drawEvidenceAnchors();
+  applyFocus();
+  positionGapCard();
+}
+
+function drawColumns(){
+  const heads = ["Hazards","Preventive barriers","Loss of control","Recovery barriers","Consequences","Receptor"];
+  const HEADROW = -1.72;
+  heads.forEach((h,i) => {
+    const [x,y] = pos(i, HEADROW);
+    const t = mk("text",{class:"colhead", x, y, "text-anchor":"middle"});
+    t.textContent = h.toUpperCase();
+    layers.cols.appendChild(t);
+    if (!VERT){
+      const l = mk("line",{class:"colrule", x1:x, y1:y+14, x2:x, y2:y+14+RH*4.4});
+      layers.cols.appendChild(l);
+    }
+  });
+  const [ex,ey] = pos(2,1);
+  const w = VERT ? 700 : 300;
+  layers.tint.appendChild(mk("rect",{class:"wingtint", x:ex-w/2, y:ey-260, width:w, height:520, rx:28}));
+}
+
+function drawEdge(e, i){
+  const a = nodeById(e.from), b = nodeById(e.to);
+  if (!a || !b) return;
+  const via = e.via ? nodeById(e.via) : null;
+  const p1 = anchorOut(a), p2 = anchorIn(b);
+  const cls = ["edge", e.kind === "inferred" ? "inferred" : e.kind === "context" ? "context" : ""].join(" ");
+  let d;
+  if (via){
+    const vp = nodePos(via);
+    d = edgePath(p1, VERT?[vp[0],vp[1]-20]:[vp[0]-20,vp[1]]) + " " + edgePath(VERT?[vp[0],vp[1]+20]:[vp[0]+20,vp[1]], p2);
+  } else d = edgePath(p1, p2);
+  const path = mk("path",{class:cls + (e.live?" live":""), d, "stroke-width": e.kind==="context" ? 1 : SW[e.support||1]});
+  path.dataset.from = e.from; path.dataset.to = e.to; path.dataset.via = e.via || "";
+  path.dataset.live = e.live ? "1" : "";
+  if (e.kind !== "context" && !e.live && e.support === 1) path.classList.add("under");
+  layers.edges.appendChild(path);
+
+  if (e.label || e.kind === "inferred"){
+    const mid = via ? nodePos(via) : [(p1[0]+p2[0])/2, (p1[1]+p2[1])/2];
+    const t = mk("text",{class:"elabel", x:mid[0], y:mid[1] + (VERT?-34:62), "text-anchor":"middle"});
+    t.textContent = e.label || "inferred by policy";
+    layers.edges.appendChild(t);
+  }
+  if (e.live){
+    const f = mk("path",{class:"flow", d});
+    layers.flow.appendChild(f);
+  }
+}
+
+function drawNode(n, i){
+  const [x,y] = nodePos(n);
+  const g = mk("g",{class:`node ${n.type}${n.ghost?" ghost":""} enter`, transform:`translate(${x},${y})`, tabindex:"0", role:"button"});
+  g.dataset.id = n.id;
+  g.style.animationDelay = (Math.max(0,n.col)*90 + Math.abs(n.row)*20) + "ms";
+
+  const st = bstate(n);
+  const isEvent = n.type === "event";
+  g.appendChild(mk("circle",{class:"halo", r: isEvent ? 40 : 24}));
+  if (n.type === "barrier"){
+    g.appendChild(barrierGlyph(st));
+    if (S.compare && DISAGREE[n.id]){
+      const second = mk("g",{transform:"translate(24,0) scale(.78)"});
+      second.appendChild(barrierGlyph(DISAGREE[n.id].model));
+      second.setAttribute("opacity",".55");
+      g.appendChild(second);
+    }
+  } else {
+    g.appendChild(glyph(n.type, isEvent && S.thin==="minor" ? .6 : 1));
+  }
+  if (n.gap && st === "unknown"){
+    const pip = mk("g",{class:"gapPip", transform:"translate(15,-15)"});
+    pip.appendChild(mk("circle",{r:7.5, style:"fill:#fff;stroke:var(--amber);stroke-width:1.3"}));
+    const q = mk("text",{x:0, y:3.4, "text-anchor":"middle", style:"font-size:9.5px;font-weight:600;fill:#8a5708;font-family:'IBM Plex Mono',monospace"});
+    q.textContent = "?"; pip.appendChild(q);
+    g.appendChild(pip);
+  }
+  g.appendChild(mk("circle",{class:"hit", r: isEvent ? 34 : 22}));
+
+  const below = n.type !== "hazard" || VERT;
+  const lbl = mk("text",{class:"lbl", x:0, y: isEvent ? 50 : (below ? 34 : 34), "text-anchor":"middle"});
+  lbl.textContent = n.label;
+  g.appendChild(lbl);
+  const sub = mk("text",{class:"sub", x:0, y: isEvent ? 64 : 47, "text-anchor":"middle"});
+  sub.textContent = (n.type === "barrier" && st) ? (STATE_WORD[st] || st).toUpperCase() : (n.sub||"").toUpperCase();
+  g.appendChild(sub);
+
+  g.setAttribute("aria-label", ariaFor(n, st));
+  g.addEventListener("click", ev => { ev.stopPropagation(); setFocus(n.id); });
+  g.addEventListener("dblclick", ev => { ev.stopPropagation(); toggleRing(n.id); });
+  g.addEventListener("keydown", ev => {
+    if (ev.key === "Enter" || ev.key === " "){ setFocus(n.id); ev.preventDefault(); }
+    if (ev.key === "e" || ev.key === "E"){ toggleRing(n.id); ev.preventDefault(); }
+  });
+  g.addEventListener("mouseenter", () => hoverNode(n.id, true));
+  g.addEventListener("mouseleave", () => hoverNode(n.id, false));
+  layers.nodes.appendChild(g);
+}
+
+function ariaFor(n, st){
+  const parts = [n.label, ROLE_WORD[n.type] || n.type];
+  if (st) parts.push(STATE_WORD[st] || st);
+  if (n.support) parts.push(SUPPORT_WORD[n.support]);
+  const ev = EVIDENCE.filter(e=>e.on===n.id).length;
+  parts.push(ev ? `${ev} excerpt${ev>1?"s":""}` : "no excerpt attached");
+  return parts.join(", ");
+}
+
+function drawEvidenceAnchors(){
+  if (S.scale === "fleet") return;
+  EVIDENCE.forEach(e => {
+    const n = nodeById(e.on); if (!n) return;
+    const [x,y] = nodePos(n);
+    const off = n.type === "event" ? 30 : 17;
+    const c = mk("circle",{class:"evAnchor", cx:x+off, cy:y-off, r:4.6, tabindex:"0", role:"button"});
+    c.setAttribute("aria-label", `Evidence excerpt for ${n.label}`);
+    c.dataset.ev = e.id;
+    const act = ev => { ev.stopPropagation(); openSource(e.id); };
+    c.addEventListener("click", act);
+    c.addEventListener("keydown", ev => { if (ev.key==="Enter"){ act(ev); } });
+    layers.anchors.appendChild(c);
+  });
+}
+
+/* ================= focus behaviour ================= */
+function upstreamOf(id, acc = new Set()){
+  G().edges.forEach(e => { if (e.to === id && !acc.has(e.from)){ acc.add(e.from); if (e.via) acc.add(e.via); upstreamOf(e.from, acc); } });
+  return acc;
+}
+function downstreamOf(id, acc = new Set()){
+  G().edges.forEach(e => { if (e.from === id && !acc.has(e.to)){ acc.add(e.to); if (e.via) acc.add(e.via); downstreamOf(e.to, acc); } });
+  return acc;
+}
+
+function applyFocus(){
+  const all = [...layers.nodes.querySelectorAll(".node")];
+  const edges = [...layers.edges.querySelectorAll(".edge")];
+  all.forEach(g => g.classList.remove("outline","silhouette","lit","focus"));
+  edges.forEach(p => p.classList.remove("dim","lit"));
+  layers.nodes.querySelectorAll(".satWrap").forEach(s=>s.remove());
+
+  renderPanel();
+  if (!S.focus) return;
+
+  const n = nodeById(S.focus);
+  if (!n) return;
+  const keep = new Set([S.focus]);
+  let mode = "route";
+
+  if (n.type === "hazard"){ downstreamOf(S.focus).forEach(x=>keep.add(x)); }
+  else if (n.type === "consequence" || n.type === "receptor"){ upstreamOf(S.focus).forEach(x=>keep.add(x)); }
+  else if (n.type === "event"){ mode = "alone"; }
+  else if (n.type === "barrier"){
+    G().edges.forEach(e => { if (e.via === S.focus){ keep.add(e.from); keep.add(e.to); } });
+    drawSatellites(n);
+  }
+  else if (n.type === "activity" || n.type === "rule" || n.type === "asset"){
+    G().edges.forEach(e => { if (e.from === S.focus || e.to === S.focus){ keep.add(e.from); keep.add(e.to); } });
+    if (n.type === "rule") G().nodes.filter(x=>x.type==="barrier"||x.type==="event").forEach(x=>keep.add(x.id));
+  }
+
+  all.forEach(g => {
+    const id = g.dataset.id;
+    if (id === S.focus){ g.classList.add("focus","lit"); return; }
+    if (mode === "alone"){ g.classList.add("silhouette"); return; }
+    if (keep.has(id)) g.classList.add("lit"); else g.classList.add("outline");
+  });
+  edges.forEach(p => {
+    const inPath = keep.has(p.dataset.from) && keep.has(p.dataset.to) && (!p.dataset.via || keep.has(p.dataset.via) || p.dataset.via === S.focus);
+    if (mode === "alone") p.classList.add("dim");
+    else if (inPath) p.classList.add("lit");
+    else p.classList.add("dim");
+  });
+}
+
+function drawSatellites(n){
+  const [x,y] = nodePos(n);
+  const w = mk("g",{class:"satWrap"});
+  const counts = {"B-GAS":6, "B-PERMIT":9, "B-INERT":3, "B-DET":4, "B-ER":12};
+  const c = counts[n.id] || 4;
+  for (let i=0;i<Math.min(c,8);i++){
+    const a = -Math.PI/2 + (i/Math.min(c,8))*Math.PI*2;
+    w.appendChild(mk("circle",{class:"satellite", cx:x+Math.cos(a)*52, cy:y+Math.sin(a)*52, r:5}));
+  }
+  const t = mk("text",{class:"elabel", x, y:y+72, "text-anchor":"middle"});
+  t.textContent = `${c} reports share this barrier state`;
+  w.appendChild(t);
+  layers.nodes.appendChild(w);
+}
+
+function hoverNode(id, on){
+  if (S.focus) return;
+  const g = layers.nodes.querySelector(`.node[data-id="${id}"]`);
+  if (!g) return;
+  g.classList.toggle("lit", on);
+  layers.edges.querySelectorAll(".edge").forEach(p => {
+    if (p.dataset.from === id || p.dataset.to === id || p.dataset.via === id) p.classList.toggle("lit", on);
+  });
+}
+
+function revealPanel(){
+  if ($("#state").classList.contains("min")) setPanel(true);
+}
+function setFocus(id){
+  const n = nodeById(id);
+  if (n && n.type === "asset" && S.scale === "report"){ toScale("fleet"); return; }
+  if (n && n.type === "asset" && S.scale === "fleet"){ toScale("report"); return; }
+  S.focus = (S.focus === id) ? null : id;
+  if (S.focus) revealPanel();
+  applyFocus();
+  positionGapCard();
+  if (S.focus){
+    const nn = nodeById(S.focus);
+    if (nn && (nn.type === "hazard")) replayFlow();
+  }
+}
+
+function toggleRing(id){
+  if (S.expanded.has(id)){
+    S.expanded.delete(id);
+    ghostNodes = ghostNodes.filter(g=>g.parent!==id);
+    ghostEdges = ghostEdges.filter(g=>g.parent!==id);
+  } else {
+    const ring = RING[id]; if (!ring) return;
+    S.expanded.add(id);
+    const host = nodeById(id); if (!host) return;
+    ring.forEach((r,i) => {
+      const gid = `${id}~${i}`;
+      ghostNodes.push({id:gid, type:r.type, col:host.col + (i%2?0.55:-0.55), row:host.row + (i+1)*0.78, label:r.label, sub:"from the wider graph", ghost:true, parent:id, support:1,
+        detail:`Neighbour of ${host.label} in the knowledge graph, attached as one expansion ring. Double-click ${host.label} again to collapse.`});
+      ghostEdges.push({from:id, to:gid, kind:"context", parent:id});
+    });
+  }
+  build();
+}
+
+/* ================= panel ================= */
+function renderPanel(){
+  const p = $("#state .sbody") || $("#state");
+  if (!S.focus){
+    const live = G().edges.filter(e=>e.live).length;
+    p.innerHTML = `<div class="role">Graph at rest</div>
+      <h4>${S.scale==="fleet" ? "Fleet graph · authorized assets" : REPORT.id + " · " + REPORT.asset}</h4>
+      <div class="kv"><span>Reading</span><b>${phaseName()}</b></div>
+      <div class="kv"><span>Live path</span><b>${live} edge${live>1?"s":""} carried flow</b></div>
+      <div class="kv"><span>Unresolved barriers</span><b>${G().nodes.filter(n=>n.states && bstate(n)==="unknown").length} unknown</b></div>
+      <div class="disc">Click any node to re-weight the graph around it. Double-click expands one ring of neighbours. Nothing here is a prediction — every glyph is a reported or extracted state.</div>
+      <div class="acts"><button class="tbtn" data-r="flow">Replay the path</button><button class="tbtn" data-r="case">Switch report</button><button class="tbtn" data-r="key">Key</button></div>`;
+    p.querySelectorAll("[data-r]").forEach(b => b.onclick = () => {
+      if (b.dataset.r === "flow") replayFlow();
+      if (b.dataset.r === "case") $("#reportBtn").click();
+      if (b.dataset.r === "key") $("#keyBtn").click();
+    });
+    return;
+  }
+  const n = nodeById(S.focus);
+  const st = bstate(n);
+  const ev = EVIDENCE.filter(e=>e.on===n.id);
+  const dis = S.compare && DISAGREE[n.id];
+  p.innerHTML = `<div class="role">${ROLE_WORD[n.type]||n.type}${n.ghost?" · ghost node":""}</div>
+    <h4>${n.label}</h4>
+    ${st?`<div class="kv"><span>Reported state at ${phaseName()}</span><b>${STATE_WORD[st]||st}</b></div>`:""}
+    ${n.support?`<div class="kv"><span>Support</span><b>${SUPPORT_WORD[n.support]}</b></div>`:""}
+    ${S.stale.has(n.id)?`<div class="kv"><span>Human review</span><b style="color:var(--amber)">marked stale — shape changed</b></div>`:""}
+    ${dis?`<div class="kv"><span>Model said</span><b>${STATE_WORD[dis.model]}</b></div><div class="kv"><span>Reviewer says</span><b>${STATE_WORD[dis.reviewer]}</b></div><div class="disc">Reason: ${dis.reason}. Both glyphs stay on the canvas until the correction is saved — disagreement is visible as disagreement.</div>`:""}
+    <div class="disc">${n.detail||""}</div>
+    ${ev.length?`<div class="kicker" style="margin-top:11px">Evidence</div>${ev.map(e=>`<button class="tbtn" style="margin-top:6px;width:100%;height:auto;padding:7px 9px;line-height:1.45" data-ev="${e.id}">“${e.quote}” ↗</button>`).join("")}`:`<div class="disc">No excerpt is attached to this node. Nothing is inferred to fill the space.</div>`}
+    <div class="acts">
+      ${RING[n.id]?`<button class="tbtn" data-a="ring">${S.expanded.has(n.id)?"Collapse ring":"Expand one ring"}</button>`:""}
+      ${n.type==="asset"?`<button class="tbtn" data-a="scale">${S.scale==="report"?"Open fleet graph":"Back to report graph"}</button>`:""}
+      <button class="tbtn" data-a="clear">Clear focus</button>
+    </div>`;
+  p.querySelectorAll("[data-ev]").forEach(b => b.onclick = () => openSource(b.dataset.ev));
+  p.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
+    if (b.dataset.a === "ring") toggleRing(n.id);
+    if (b.dataset.a === "scale") toScale(S.scale === "report" ? "fleet" : "report");
+    if (b.dataset.a === "clear"){ S.focus = null; applyFocus(); }
+  });
+}
+
+/* ================= gap card ================= */
+function activeGapNode(){
+  return G().nodes.find(n => n.gap && bstate(n) === "unknown" && (!S.focus || S.focus === n.id));
+}
+function positionGapCard(){
+  const card = $("#gapcard");
+  const f = S.focus ? nodeById(S.focus) : null;
+  const n = (f && f.gap && bstate(f) === "unknown") ? f : null;
+  if (!n || S.thin !== "full"){ card.classList.remove("on"); return; }
+  const [x,y] = nodePos(n);
+  const p = toScreen(x, y);
+  card.innerHTML = `<div class="kicker">Information gap · grows from the node</div>
+    <div class="q">${n.gap.q}</div>
+    <div class="why">${n.gap.why}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="tbtn pri" data-ans="intact">Record: verified</button>
+      <button class="tbtn" data-ans="failed">Record: not done</button>
+      <button class="tbtn" data-ans="leave">Leave unresolved</button>
+    </div>`;
+  card.classList.add("on");
+  const cv = $("#canvasWrap").getBoundingClientRect();
+  const cw = card.offsetWidth || 246, ch = card.offsetHeight || 200;
+  const evNode = layers.nodes.querySelector(".node.event");
+  const ev = evNode ? evNode.getBoundingClientRect() : null;
+  const cand = [[p[0] - cw - 34, p[1] - ch/2], [p[0] - cw/2, p[1] + 46], [p[0] + 34, p[1] - ch/2], [p[0] - cw/2, p[1] - ch - 40]];
+  const fits = (x,y) => x >= cv.left+8 && x+cw <= cv.right-8 && y >= cv.top+8 && y+ch <= cv.bottom-8
+      && !(ev && !(x+cw < ev.left-10 || x > ev.right+10 || y+ch < ev.top-10 || y > ev.bottom+10));
+  let spot = cand.find(c => fits(c[0], c[1]));
+  if (!spot){
+    const corners = [[cv.left+8, cv.bottom-ch-8],[cv.left+8, cv.top+8],[cv.right-cw-8, cv.bottom-ch-8],[cv.right-cw-8, cv.top+8]];
+    const clear = corners.filter(c => !(ev && !(c[0]+cw < ev.left-10 || c[0] > ev.right+10 || c[1]+ch < ev.top-10 || c[1] > ev.bottom+10)));
+    const pool = clear.length ? clear : corners;
+    spot = pool.sort((a,b) => Math.hypot(b[0]-p[0], b[1]-p[1]) - Math.hypot(a[0]-p[0], a[1]-p[1])).pop();
+    card.dataset.docked = "1";
+  } else delete card.dataset.docked;
+  const vx = Math.max(cv.left+8, Math.min(spot[0], cv.right - cw - 8));
+  const vy = Math.max(cv.top+8,  Math.min(spot[1], cv.bottom - ch - 8));
+  card.style.left = (vx - cv.left) + "px";
+  card.style.top  = (vy - cv.top) + "px";
+  card.classList.toggle("leftOf", spot === cand[0] || spot === cand[2]);
+  card.querySelectorAll("[data-ans]").forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    const a = b.dataset.ans;
+    if (a === "leave"){ card.classList.remove("on"); return; }
+    answerGap(n.id, a);
+  });
+}
+function answerGap(id, state){
+  S.answered[id] = state;
+  S.stale.add(id);
+  build();
+  const g = layers.nodes.querySelector(`.node[data-id="${id}"]`);
+  if (g) { g.classList.add("morph"); setTimeout(()=>g.classList.remove("morph"), 420); }
+  const src = $("#source");
+  if (src.classList.contains("on")) renderSource(S.pinnedEvidence, id, state);
+  setTimeout(()=>{ replayFlow(); }, 260);
+}
+
+/* ================= source sheet ================= */
+function openSource(evId){
+  S.pinnedEvidence = evId;
+  renderSource(evId);
+  $("#source").classList.add("on");
+}
+function renderSource(evId, answeredId, answeredState){
+  const e = EVIDENCE.find(x=>x.id===evId);
+  const html = REPORT.narrative.map(seg => seg.m ? `<mark data-m="${seg.m}" class="${seg.m===evId?"hit":""}">${seg.t}</mark>` : seg.t).join("");
+  const appended = Object.keys(S.answered).map(id => {
+    const n = nodeById(id);
+    return `<div class="seg"><span class="kicker">Appended · attributed answer</span><br/>${n.label}: recorded as <b>${STATE_WORD[S.answered[id]]}</b> by reviewer · ${new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short"})}. The original report text is unchanged.</div>`;
+  }).join("");
+  $("#source").innerHTML = `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+      <div><div class="kicker">Source narrative</div><b style="font-size:13px">${REPORT.id}</b></div>
+      <button class="pill" id="srcClose" style="margin-left:auto">Close</button>
+    </div>
+    <p>${html}</p>
+    ${e?`<div class="kicker">Underlined for the node you clicked</div><div style="font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:4px">“${e.quote}”</div>`:""}
+    ${appended}
+    <div class="disc" style="margin-top:14px">Excerpts are exact spans from the supplied source. Answers recorded on the graph are appended as attributed segments — the narrative itself is never edited.</div>`;
+  $("#srcClose").onclick = () => $("#source").classList.remove("on");
+  const hit = $("#source").querySelector("mark.hit");
+  if (hit) hit.scrollIntoView ? hit.parentElement.scrollTop = 0 : null;
+}
+
+/* ================= scrubber ================= */
+function renderScrub(){
+  const s = $("#scrub");
+  const disabled = S.thin === "notiming" || S.thin === "failed";
+  s.classList.toggle("disabled", disabled);
+  const late = G().nodes.filter(n=>n.states && n.states[phaseName()] === "late").length;
+  const unknown = G().nodes.filter(n=>n.states && bstate(n) === "unknown").length;
+  s.innerHTML = `<div class="top"><span class="kicker">Reading the graph at</span><span class="now">${phaseName()}</span>
+      <span class="kicker" style="margin-left:auto">${unknown} unknown · ${late} present only after the event</span></div>
+    <div class="rail"><div class="track"></div><div class="fill" style="width:${(S.phase/(PHASES.length-1))*100}%"></div>
+      <div class="stops">${PHASES.map((p,i)=>`<button class="stop${i===S.phase?" on":""}${p==="exposure"?" exp":""}" data-p="${i}" title="${p}"><i></i><span style="${i===0?"left:0":i===PHASES.length-1?"right:0":"left:50%;transform:translateX(-50%)"}">${p}</span></button>`).join("")}</div>
+    </div>
+    <div class="why">${disabled ? "No moment can be placed on any barrier in this report, so time cannot be read." : phaseName()==="exposure"
+      ? "At the moment of exposure the gas test has no established state and inerting is unevidenced — the path from the hazard to the event is not closed by anything."
+      : phaseName()==="after"
+      ? "The gas test and the detection alarm appear only after the event. Barriers drawn behind the event node could not have acted on the exposure."
+      : "Drag or use ← → to read barrier states at another moment. Barrier glyphs redraw; positions never move."}</div>`;
+  s.querySelectorAll("[data-p]").forEach(b => b.onclick = () => setPhase(+b.dataset.p));
+}
+function setPhase(i){
+  S.phase = Math.max(0, Math.min(PHASES.length-1, i));
+  build(); renderScrub();
+}
+
+/* ================= flow ================= */
+function replayFlow(){
+  layers.flow.querySelectorAll(".flow").forEach((f,i) => {
+    const len = f.getTotalLength();
+    f.style.setProperty("--len", len);
+    f.setAttribute("stroke-dasharray", len);
+    f.setAttribute("stroke-dashoffset", len);
+    f.classList.remove("run"); void f.getBoundingClientRect();
+    f.style.animationDelay = (i*260) + "ms";
+    f.classList.add("run");
+  });
+  const ev = layers.nodes.querySelector('.node.event');
+  if (ev){ setTimeout(()=>{ ev.classList.add("swell"); setTimeout(()=>ev.classList.remove("swell"), 520); }, 900); }
+}
+
+/* ================= scale change ================= */
+function toScale(sc){
+  S.scale = sc; S.focus = null; ghostNodes = []; ghostEdges = []; S.expanded.clear();
+  renderCrumb(); build(); renderScrub(); fit(true);
+  setTimeout(replayFlow, 500);
+}
+function renderCrumb(){
+  const unresolved = (CASES[S.caseId]?.nodes || []).filter(n => n.gap).length;
+  $("#crumb").innerHTML = S.scale === "report"
+    ? `<span class="kicker">Report</span><b>${REPORT.id}</b><span>·</span>${REPORT.asset} · ${REPORT.area} · ${REPORT.activity}
+       <span class="kicker" style="margin-left:6px">${unresolved} unresolved</span>`
+    : `<span class="kicker">Fleet</span><b>Authorized assets</b><span>·</span>101 distinct reports · same grammar
+       <button class="tbtn" id="backCase" style="height:22px;margin-left:8px">Back to ${S.caseId}</button>`;
+  const b = $("#backCase"); if (b) b.onclick = () => toScale("report");
+}
+
+/* ================= thin states ================= */
+function renderThin(){
+  const t = THIN_STATES[S.thin];
+  $("#thin").classList.add("on");
+  $("#thin").innerHTML = `<div class="kicker">${t.t}</div>
+    <div style="font-size:12.5px;line-height:1.55;margin:8px 0 12px;color:var(--ink-2)">${t.b}</div>
+    <button class="pill" id="thinBack">Back to the full graph</button>`;
+  renderScrub();
+  $("#thinBack").onclick = () => { S.thin = "full"; build(); renderScrub(); fit(true); setTimeout(replayFlow, 480); };
+
+  if (S.thin === "nohazard" || S.thin === "minor"){
+    const [x,y] = pos(2,1);
+    const g = mk("g",{class:"node event", transform:`translate(${x},${y})`, tabindex:"0"});
+    g.appendChild(glyph("event", S.thin === "minor" ? .55 : 1));
+    const l = mk("text",{class:"lbl", x:0, y:52, "text-anchor":"middle"}); l.textContent = "Ignition in vessel";
+    g.appendChild(l);
+    layers.nodes.appendChild(g);
+    if (S.thin === "minor"){
+      const [hx,hy] = pos(0,1);
+      const h = mk("g",{class:"node hazard", transform:`translate(${hx},${hy})`});
+      h.appendChild(glyph("hazard", .8));
+      const hl = mk("text",{class:"lbl", x:0, y:32, "text-anchor":"middle"}); hl.textContent = "Hot surface";
+      h.appendChild(hl); layers.nodes.appendChild(h);
+      layers.edges.appendChild(mk("path",{class:"edge", d:edgePath([hx+20,hy],[x-30,y]), "stroke-width":1.4}));
+    }
+  }
+  if (S.thin === "notiming"){
+    ["Gas test","Permit scope","Inerting"].forEach((lb,i) => {
+      const [x,y] = pos(1 + i*0.9, -1.5);
+      const g = mk("g",{class:"node barrier", transform:`translate(${x},${y})`, tabindex:"0"});
+      g.appendChild(barrierGlyph("unknown"));
+      const l = mk("text",{class:"lbl", x:0, y:34, "text-anchor":"middle"}); l.textContent = lb;
+      const s2 = mk("text",{class:"sub", x:0, y:47, "text-anchor":"middle"}); s2.textContent = "UNPLACED IN TIME";
+      g.appendChild(l); g.appendChild(s2); layers.nodes.appendChild(g);
+    });
+    const [x,y] = pos(2,1);
+    const g = mk("g",{class:"node event", transform:`translate(${x},${y})`});
+    g.appendChild(glyph("event",1)); layers.nodes.appendChild(g);
+  }
+  fit(false);
+}
+
+/* ================= view transform ================= */
+function clampT(){
+  if (!root) return;
+  const r = svg.getBoundingClientRect(); if (!r.width) return;
+  const bb = root.getBBox(); if (!bb.width) return;
+  const m = 120;
+  const minX = r.width - m - (bb.x + bb.width) * T.k, maxX = m - bb.x * T.k;
+  const minY = r.height - m - (bb.y + bb.height) * T.k, maxY = m - bb.y * T.k;
+  T.x = minX > maxX ? (minX + maxX)/2 : Math.min(maxX, Math.max(minX, T.x));
+  T.y = minY > maxY ? (minY + maxY)/2 : Math.min(maxY, Math.max(minY, T.y));
+}
+function applyT(){ clampT(); root.setAttribute("transform", `translate(${T.x},${T.y}) scale(${T.k})`); }
+function toScreen(x,y){
+  const r = svg.getBoundingClientRect();
+  return [r.left + T.x + x*T.k, r.top + T.y + y*T.k];
+}
+function fit(animate){
+  const r = svg.getBoundingClientRect();
+  if (!r.width) return;
+  const bb = root.getBBox();
+  if (!bb.width) return;
+  const pad = 26, left = pad, top = pad;
+  const availW = Math.max(220, r.width - pad*2), availH = Math.max(200, r.height - pad*2);
+  const MINK = availH < 460 ? 0.5 : 0.68;
+  const raw = Math.min(availW/bb.width, availH/bb.height, 1.2);
+  const k = Math.max(raw, MINK);
+  const overflow = bb.width*k > availW;
+  let target;
+  if (overflow){
+    const ev = G().nodes.find(n=>n.type==="event");
+    const c = ev ? nodePos(ev) : [bb.x+bb.width/2, bb.y+bb.height/2];
+    let y = top + Math.max(0,(availH - bb.height*k)/2) - bb.y*k;
+    const maxY = r.height - pad - (bb.y+bb.height)*k;
+    y = Math.min(y, maxY);
+    y = Math.max(y, top - bb.y*k);
+    target = {k, x:left + availW/2 - c[0]*k, y};
+  } else {
+    target = {k, x:left + (availW - bb.width*k)/2 - bb.x*k, y:top + Math.max(0,(availH - bb.height*k)/2) - bb.y*k};
+  }
+  if (!animate){ T = target; applyT(); updateWingJumps(); return; }
+  const from = {...T}, t0 = performance.now();
+  const tick = () => {
+    const u = Math.min(1, (performance.now()-t0)/420);
+    const e = 1 - Math.pow(1-u, 3);
+    T = {k:from.k+(target.k-from.k)*e, x:from.x+(target.x-from.x)*e, y:from.y+(target.y-from.y)*e};
+    applyT();
+    if (u < 1) requestAnimationFrame(tick); else { positionGapCard(); updateWingJumps(); }
+  };
+  tick();
+}
+function panToNode(id){
+  const n = nodeById(id); if (!n) return;
+  const r = svg.getBoundingClientRect(), p = nodePos(n);
+  const from = {...T}, target = {k:T.k, x:r.width/2 - p[0]*T.k, y:T.y}, t0 = performance.now();
+  const tick = () => {
+    const u = Math.min(1,(performance.now()-t0)/380), e = 1-Math.pow(1-u,3);
+    T = {k:target.k, x:from.x+(target.x-from.x)*e, y:from.y+(target.y-from.y)*e};
+    applyT(); if (u<1) requestAnimationFrame(tick); else { positionGapCard(); updateWingJumps(); }
+  };
+  tick();
+}
+function updateWingJumps(){
+  const r = svg.getBoundingClientRect(); if (!r.width || !root) return;
+  const bb = root.getBBox();
+  const leftEdge = T.x + bb.x*T.k, rightEdge = T.x + (bb.x+bb.width)*T.k;
+  $("#jumpL").classList.toggle("on", leftEdge < -8 && S.thin==="full");
+  $("#jumpR").classList.toggle("on", rightEdge > r.width + 8 && S.thin==="full");
+  const botEdge = T.y + (bb.y+bb.height)*T.k;
+  $("#jumpD").classList.toggle("on", botEdge > r.height + 8 && S.thin==="full");
+}
+function zoomBy(f){
+  const r = svg.getBoundingClientRect(), cx = r.width/2, cy = r.height/2;
+  const k = Math.max(.35, Math.min(3, T.k*f));
+  T.x = cx - (cx - T.x) * (k/T.k); T.y = cy - (cy - T.y) * (k/T.k); T.k = k;
+  applyT(); positionGapCard(); updateWingJumps();
+}
+(function panzoom(){
+  const c = $("#canvas");
+  let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+  c.addEventListener("pointerdown", e => {
+    if (e.target.closest(".node") || e.target.closest(".evAnchor")) return;
+    dragging = true; sx = e.clientX; sy = e.clientY; ox = T.x; oy = T.y; c.classList.add("drag");
+    c.setPointerCapture(e.pointerId);
+  });
+  c.addEventListener("pointermove", e => { if (!dragging) return; T.x = ox + (e.clientX-sx); T.y = oy + (e.clientY-sy); applyT(); updateWingJumps(); });
+  c.addEventListener("pointerup", e => { dragging = false; c.classList.remove("drag"); positionGapCard(); });
+  c.addEventListener("wheel", e => {
+    e.preventDefault();
+    const r = svg.getBoundingClientRect(), px = e.clientX-r.left, py = e.clientY-r.top;
+    const k = Math.max(.35, Math.min(3, T.k * (e.deltaY < 0 ? 1.09 : 1/1.09)));
+    T.x = px - (px - T.x)*(k/T.k); T.y = py - (py - T.y)*(k/T.k); T.k = k;
+    applyT(); positionGapCard();
+  }, {passive:false});
+  c.addEventListener("click", e => { if (!e.target.closest(".node") && !e.target.closest(".evAnchor")){ S.focus = null; applyFocus(); positionGapCard(); } });
+})();
+
+/* ================= legend ================= */
+function renderLegend(){
+  const rows = [
+    ["hazard","Hazard / energy source"], ["event","Loss of control"], ["consequence","Credible consequence"],
+    ["receptor","Receptor — person exposed"], ["outcome","Reported outcome"], ["activity","Activity"], ["asset","Asset"], ["rule","Life-saving rule"]
+  ];
+  const bars = [["intact","Implemented"],["failed","Failed"],["unknown","State unknown"],["late","After the event"]];
+  const icon = (type) => { const s = mk("svg",{width:26,height:26,viewBox:"-13 -13 26 26"}); const g = glyph(type,.62); s.appendChild(g); return s.outerHTML; };
+  const bicon = (st) => { const s = mk("svg",{width:26,height:26,viewBox:"-13 -13 26 26"}); const g = mk("g",{transform:"scale(.62)"}); g.appendChild(barrierGlyph(st)); s.appendChild(g); return s.outerHTML; };
+  $("#legend").innerHTML = `<div class="lhead"><span class="kicker">Key</span><button id="legToggle" title="Collapse">–</button></div><div class="lbody"><div class="kicker" style="margin-top:6px">Node vocabulary</div>
+    ${rows.map(r=>`<div class="lrow">${icon(r[0])}<span>${r[1]}</span></div>`).join("")}
+    <div class="kicker grp">Barrier state is its glyph</div>
+    ${bars.map(b=>`<div class="lrow">${bicon(b[0])}<span>${b[1]}</span></div>`).join("")}
+    <div class="kicker grp">Edges</div>
+    <div class="lrow"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="rgba(20,20,32,.5)" stroke-width="3"/></svg><span>Causal, evidenced</span></div>
+    <div class="lrow"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="rgba(20,20,32,.5)" stroke-width="2" stroke-dasharray="5 4"/></svg><span>Inferred by policy</span></div>
+    <div class="lrow"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="#5b3df5" stroke-width="4"/></svg><span>The path the hazard took</span></div>
+    <div class="lrow"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="rgba(20,20,32,.28)" stroke-width="1" stroke-dasharray="1.5 4"/></svg><span>Context, carries no flow</span></div></div>`;
+
+}
+
+/* ================= wiring ================= */
+$("#reportBtn").onclick = e => {
+  const p = $("#reportPop");
+  p.innerHTML = `<h4>Reports with an evidence graph</h4><div class="kicker" style="margin-bottom:4px">Same grammar, one graph each</div>` +
+    CASE_LIST.map(c=>`<button class="prow" data-c="${c.id}"><span class="mono" style="color:var(--violet);font-size:11px;flex:none">${c.id}</span>
+      <span><b style="font-weight:500">${c.site}</b><br/><span style="color:var(--ink-2)">${c.line}</span><br/>
+      <span class="mono" style="font-size:9.5px;color:var(--amber)">${c.flag}</span></span></button>`).join("");
+  p.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { p.classList.remove("on"); loadCase(b.dataset.c); });
+  const r = e.currentTarget.getBoundingClientRect();
+  p.style.top = (r.bottom + 8) + "px"; p.style.left = Math.max(12, Math.min(r.left - 40, innerWidth - 336)) + "px";
+  p.classList.add("on");
+};
+$("#keyBtn").onclick = e => {
+  const p = $("#legend"); const open = p.classList.toggle("on");
+  const r = e.currentTarget.getBoundingClientRect();
+  p.style.top = (r.bottom + 8) + "px"; p.style.left = Math.max(12, Math.min(r.left - 60, innerWidth - 250)) + "px";
+  e.currentTarget.classList.toggle("on", open);
+};
+$("#jumpL").onclick = () => panToNode(S.scale==="fleet" ? "F-PRES" : (G().nodes.find(n=>n.type==="hazard")||{}).id);
+$("#jumpR").onclick = () => panToNode(S.scale==="fleet" ? "F-PPL" : (G().nodes.find(n=>n.type==="receptor")||{}).id);
+$("#jumpD").onclick = () => {
+  const r = svg.getBoundingClientRect(), bb = root.getBBox();
+  const from = {...T}, ty = r.height - 40 - (bb.y+bb.height)*T.k, t0 = performance.now();
+  const tick = () => { const u = Math.min(1,(performance.now()-t0)/380), e = 1-Math.pow(1-u,3);
+    T.y = from.y + (ty - from.y)*e; applyT(); if (u<1) requestAnimationFrame(tick); else { positionGapCard(); updateWingJumps(); } };
+  tick();
+};
+$("#tFit").onclick = () => fit(true);
+$("#tIn").onclick = () => zoomBy(1.22);
+$("#tOut").onclick = () => zoomBy(1/1.22);
+$("#tFlow").onclick = replayFlow;
+$("#tCollapse").onclick = () => { S.expanded.clear(); ghostNodes = []; ghostEdges = []; build(); };
+$("#compareBtn").onclick = e => { S.compare = !S.compare; e.currentTarget.classList.toggle("on", S.compare); build(); };
+$("#rmBtn").onclick = e => { document.body.classList.toggle("rm"); e.currentTarget.classList.toggle("on", document.body.classList.contains("rm")); };
+
+const STATES = [
+  ["Graph at rest · flow runs once", ()=>loadCase(S.caseId)],
+  ["Switch report", ()=>$("#reportBtn").click()],
+  ["Focus a hazard — its route lights", ()=>{ S.thin="full";build();setFocus("H-ATM"); }],
+  ["Focus a barrier — satellites appear", ()=>{ S.thin="full";build();setFocus("B-PERMIT"); }],
+  ["Focus the event — wings to silhouette", ()=>{ S.thin="full";build();setFocus("EVENT"); }],
+  ["Focus a consequence — trace backwards", ()=>{ S.thin="full";build();setFocus("C-FIRE"); }],
+  ["Focus the receptor — paths that reached a person", ()=>{ S.thin="full";build();setFocus("RECEPTOR"); }],
+  ["Focus a rule — what made it relevant", ()=>{ S.thin="full";build();setFocus("R-HW"); }],
+  ["Expand one ring from the activity", ()=>{ S.thin="full";S.focus=null;build();toggleRing("ACT"); }],
+  ["Scrub to exposure — the hole is open", ()=>{ S.thin="full";setPhase(2);S.focus=null;applyFocus(); }],
+  ["Scrub to after — barriers arrive too late", ()=>{ S.thin="full";setPhase(4);S.focus=null;applyFocus(); }],
+  ["Answer a gap — only that node morphs", ()=>{ S.thin="full";setPhase(2);build();setTimeout(()=>answerGap("B-GAS","failed"),260); }],
+  ["Evidence anchor — underline the words", ()=>{ S.thin="full";build();openSource("E-PERMIT");setFocus("B-PERMIT"); }],
+  ["Model vs reviewer", ()=>{ S.thin="full";S.compare=true;$("#compareBtn").classList.add("on");build();setFocus("B-GAS"); }],
+  ["Fleet scale — same grammar", ()=>{ S.thin="full";toScale("fleet"); }],
+  ["No hazard extracted", ()=>{ S.thin="nohazard";build();renderScrub(); }],
+  ["Analysis failed", ()=>{ S.thin="failed";build();renderScrub(); }],
+  ["Timing unsupported", ()=>{ S.thin="notiming";build();renderScrub(); }],
+  ["Nothing serious reported", ()=>{ S.thin="minor";build();renderScrub(); }],
+  ["Reduced-motion equivalent", ()=>{ document.body.classList.add("rm");$("#rmBtn").classList.add("on");build(); }]
+];
+$("#statesBtn").onclick = e => {
+  const p = $("#statesPop");
+  p.innerHTML = `<h4>Demonstration states</h4>` + STATES.map((s,i)=>`<button class="prow" data-s="${i}"><span class="mono" style="color:var(--violet);font-size:11px">${String(i+1).padStart(2,"0")}</span><span>${s[0]}</span></button>`).join("");
+  p.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { p.classList.remove("on"); STATES[+b.dataset.s][1](); });
+  const r = e.currentTarget.getBoundingClientRect();
+  p.style.top = (r.bottom + 8) + "px"; p.style.left = Math.max(12, Math.min(r.left - 180, innerWidth - 336)) + "px";
+  p.classList.add("on");
+};
+document.addEventListener("click", e => {
+  if (!e.target.closest(".pop") && !e.target.closest("#statesBtn")) $("#statesPop").classList.remove("on");
+  if (!e.target.closest(".pop") && !e.target.closest("#reportBtn")) $("#reportPop").classList.remove("on");
+  if (!e.target.closest(".pop") && !e.target.closest("#keyBtn")){ $("#legend").classList.remove("on"); $("#keyBtn").classList.remove("on"); }
+});
+
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === "ArrowRight"){ setPhase(S.phase+1); e.preventDefault(); }
+  if (e.key === "ArrowLeft"){ setPhase(S.phase-1); e.preventDefault(); }
+  if (e.key === "Escape"){
+    if ($("#source").classList.contains("on")) $("#source").classList.remove("on");
+    else if (S.focus){ S.focus = null; applyFocus(); positionGapCard(); }
+  }
+  if (e.key === "f" || e.key === "F") fit(true);
+});
+
+let W0 = 0;
+function remeasure(){
+  const r = svg.getBoundingClientRect();
+  if (!r.width) return false;
+  const wasVert = VERT;
+  VERT = r.width < 620;
+  if (VERT !== wasVert || Math.abs(r.width - W0) > 2){ W0 = r.width; syncDockGap(); autoCollapse(); build(); fit(false); }
+  return true;
+}
+let roPending = false;
+new ResizeObserver(() => {
+  if (roPending) return;
+  roPending = true;
+  requestAnimationFrame(() => { roPending = false; remeasure(); });
+}).observe($("#canvasWrap"));
+window.addEventListener("resize", remeasure);
+
+let panelUserSet = false;
+function syncDockGap(){
+  const d = $("#dock"); if (!d) return;
+  const vertical = getComputedStyle(d).flexDirection === "column";
+  const w = d.offsetWidth || 54;
+  document.documentElement.style.setProperty("--dockgap", (vertical ? 14 + w + 16 : 16) + "px");
+}
+function autoCollapse(){
+  if (panelUserSet || S.focus) return;
+  $("#state").classList.toggle("min", innerWidth < 1000);
+}
+function setPanel(open){
+  const s = $("#state");
+  s.classList.toggle("min", !open);
+  $("#stateToggle").title = open ? "Collapse panel" : "Expand panel";
+  requestAnimationFrame(()=>fit(true));
+}
+$("#stateToggle").onclick = e => { e.stopPropagation(); panelUserSet = true; setPanel($("#state").classList.contains("min")); };
+$("#state").addEventListener("click", () => { if ($("#state").classList.contains("min")){ panelUserSet = true; setPanel(true); } });
+const qp = new URLSearchParams(location.search).get("report");
+if (qp) {
+  let targetId = qp;
+  if (REPORT_ALIASES[qp]) targetId = REPORT_ALIASES[qp];
+  if (CASES[targetId]) {
+    S.caseId = targetId;
+    const c = CASES[targetId];
+    REPORT = JSON.parse(JSON.stringify(c.meta));
+    if (qp !== targetId) REPORT.id = qp;
+    NODES = c.nodes; EDGES = c.edges; EVIDENCE = c.evidence; DISAGREE = c.disagree || {}; RING = c.ring || {};
+  }
+}
+renderLegend(); syncDockGap(); autoCollapse(); renderCrumb(); build(); renderScrub();
+(function boot(){
+  let tries = 0;
+  const iv = setInterval(() => { tries++; if ((remeasure() && W0 > 0) || tries > 50){ clearInterval(iv); fit(false); setTimeout(replayFlow, 420); } }, 100);
+  requestAnimationFrame(() => { remeasure(); fit(false); });
+})();
+</script>
+</body>
+</html>

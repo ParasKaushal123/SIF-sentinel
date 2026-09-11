@@ -1,0 +1,55 @@
+# Site coordinates for SIF Sentinel spatial map
+# `name` is the canonical supplied_site value used in the seed data.
+# `short` is the display label used in map beacons.
+# Coordinates are approximate centroids for Oil India operational areas.
+
+sites:
+  - name: "Duliajan Field"
+    short: "Duliajan"
+    type: "Onshore field"
+    glyph: "◇"
+    region: "Assam"
+    lon: 95.32
+    lat: 27.37
+  - name: "Moran Processing Plant"
+    short: "Moran"
+    type: "Onshore installation"
+    glyph: "◈"
+    region: "Assam"
+    lon: 94.91
+    lat: 27.16
+  - name: "Naharkatiya Drilling Site"
+    short: "Naharkatiya"
+    type: "Drilling rig"
+    glyph: "△"
+    region: "Assam"
+    lon: 95.35
+    lat: 27.28
+  - name: "Digboi Refinery"
+    short: "Digboi"
+    type: "Onshore installation"
+    glyph: "◈"
+    region: "Assam"
+    lon: 95.62
+    lat: 27.39
+  - name: "Jorhat Pipeline Corridor"
+    short: "Jorhat"
+    type: "Pipeline corridor"
+    glyph: "⬡"
+    region: "Assam"
+    lon: 94.20
+    lat: 26.75
+  - name: "Geleki Gas Collection Station"
+    short: "Geleki"
+    type: "Onshore installation"
+    glyph: "◈"
+    region: "Assam"
+    lon: 94.62
+    lat: 26.88
+  - name: "Rupsi Helibase"
+    short: "Rupsi"
+    type: "Helibase"
+    glyph: "⌬"
+    region: "Assam"
+    lon: 89.91
+    lat: 26.14

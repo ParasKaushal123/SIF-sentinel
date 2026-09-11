@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SIF Sentinel — Insights · Pattern Observatory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/sentinel.css">
+</head>
+<body>
+<div id="atmos"><div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div></div>
+<div id="grain"></div>
+
+<div id="shell">
+  <header id="top">
+    <div class="brand"><div class="mk"></div><b>SIF Sentinel</b></div>
+    <div class="dataset"><span class="dot"></span>Report corpus · OIL India · 212 eligible</div>
+    <div id="searchWrap">
+      <svg class="mag" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="4.4"/><path d="M9.4 9.4L13 13"/></svg>
+      <input id="search" placeholder="Search activity, hazard, control, rule, report, wording…" autocomplete="off" />
+    </div>
+    <div class="hdr-right">
+      <select class="pill" id="period" title="Reporting period">
+        <option>Last 12 months</option><option>Last 6 months</option><option>Last 24 months</option><option>2025 calendar year</option>
+      </select>
+      <button class="pill" id="savedBtn">Saved views</button>
+      <button class="pill" id="statesBtn">States</button>
+      <button class="pill" id="rmBtn" title="Reduced-motion equivalent">Motion</button>
+    </div>
+  </header>
+
+  <div id="body">
+    <nav id="dock" class="glass glass-ring">
+      <a class="nav" href="index.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 6l6-4 6 4v8H2z"/><path d="M6 14v-4h4v4"/></svg><span>Command Centre</span></a>
+      <button class="nav on"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13h12"/><path d="M4 11V6M8 11V3M12 11V8"/></svg><span>Insights</span></button>
+      <a class="nav" href="evidence.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="3.4" cy="8" r="1.7"/><circle cx="12.6" cy="4.6" r="1.7"/><circle cx="12.6" cy="11.4" r="1.7"/><path d="M5 7.2l6-2M5 8.8l6 2"/></svg><span>Evidence graph</span></a>
+      <a class="nav" href="import.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2v8"/><path d="M5 7l3 3 3-3"/><path d="M2.5 13h11"/></svg><span>Import</span></a>
+      <a class="nav" href="lab.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.6"/></svg><span>Luck Lab</span></a>
+    </nav>
+
+    <div id="work">
+      <div id="toolbar">
+        <div id="lensRail" class="glass glass-ring"></div>
+        <button class="pill" id="ovBtn">Overview mode</button>
+        <button class="pill" id="askBtn">Ask Parikshan</button>
+        <div id="filterBar"></div>
+      </div>
+      <div id="lensNote"></div>
+      <div id="field"></div>
+      <div id="overview"></div>
+      <div id="rail" class="glass glass-ring"></div>
+    </div>
+  </div>
+</div>
+
+<div id="tip" class="glass glass-ring"></div>
+<div id="savedPop" class="pop glass glass-ring"></div>
+<div id="statesPop" class="pop glass glass-ring"></div>
+<div id="filterPop" class="pop glass glass-ring"></div>
+<div id="aicursor"><span class="sp"></span><span class="v"></span></div>
+<div id="wb"></div>
+
+<script src="js/api.js"></script>
+<script src="js/insights.js"></script>
+</body>
+</html>

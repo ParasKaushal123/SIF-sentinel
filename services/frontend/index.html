@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SIF Sentinel — Spatial Command Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="css/sentinel.css">
+</head>
+<body>
+<div id="atmos"><div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div></div>
+<div id="grain"></div>
+
+<div id="shell">
+  <header id="top">
+    <div class="brand"><div class="mk"></div><b>SIF Sentinel</b></div>
+    <div class="dataset"><span class="dot"></span>Authorized asset register · OIL India · v2026.03</div>
+    <div id="searchWrap">
+      <svg class="mag" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="4.4"/><path d="M9.4 9.4L13 13"/></svg>
+      <input id="search" placeholder="Search assets and reports…" autocomplete="off" />
+      <div id="results" class="glass glass-ring"></div>
+    </div>
+    <div class="hdr-right">
+      <button class="pill" id="fitBtn">Fit assets</button>
+      <button class="pill" id="statesBtn">States</button>
+    </div>
+  </header>
+
+  <div id="body">
+    <div id="map"></div>
+    <div id="sweep"><i></i></div>
+
+    <div id="layers">
+      <svg id="links"></svg>
+      <div class="lay" id="beacons"></div>
+      <div class="lay" id="constel"></div>
+    </div>
+
+    <div id="thread" class="glass glass-ring"></div>
+    <div id="tip" class="glass glass-ring"></div>
+
+    <nav id="dock" class="glass glass-ring">
+      <button class="nav on" data-dest="Command Centre"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 6l6-4 6 4v8H2z"/><path d="M6 14v-4h4v4"/></svg><span>Command Centre</span></button>
+      <a class="nav" data-dest="Insights" href="insights.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13h12"/><path d="M4 11V6M8 11V3M12 11V8"/></svg><span>Insights</span></a>
+      <a class="nav" href="evidence.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="3.4" cy="8" r="1.7"/><circle cx="12.6" cy="4.6" r="1.7"/><circle cx="12.6" cy="11.4" r="1.7"/><path d="M5 7.2l6-2M5 8.8l6 2"/></svg><span>Evidence graph</span></a>
+      <a class="nav" href="import.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2v8"/><path d="M5 7l3 3 3-3"/><path d="M2.5 13h11"/></svg><span>Import</span></a>
+      <a class="nav" href="lab.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.6"/></svg><span>Luck Lab</span></a>
+    </nav>
+
+    <div id="identity" class="glass glass-ring">
+      <div class="kicker">Workspace</div>
+      <div class="t">India upstream · authorized sites</div>
+      <div class="kicker" id="idSub">7 assets · 15 reports</div>
+    </div>
+
+    <div id="crumb" class="glass glass-ring"></div>
+    <div id="lens" class="glass glass-ring"></div>
+
+    <div id="edge">
+      <div id="zoomctl" class="glass glass-ring">
+        <button id="zIn" title="Zoom in">+</button>
+        <button id="zOut" title="Zoom out">−</button>
+        <button id="zHome" title="Return to selected asset">◎</button>
+      </div>
+      <button class="efl" id="unassignedBtn">Unassigned reports <span class="b">1</span></button>
+      <button class="efl warn" id="unmappedBtn">Unmapped assets <span class="b">2</span></button>
+    </div>
+
+    <div id="prov">source · authorized register sync 09:42 IST<br/>projection mercator · natural earth 110m</div>
+
+    <div id="ribbon" class="glass glass-ring">
+      <div class="rk kicker">Priority</div>
+      <div id="track"></div>
+      <button class="pill" id="queueBtn">Queue mode</button>
+    </div>
+    <div id="queue" class="glass glass-ring"></div>
+
+    <div id="unassigned" class="floatpanel glass glass-ring"></div>
+    <div id="unmapped" class="floatpanel glass glass-ring"></div>
+    <div id="statesPanel" class="floatpanel glass glass-ring"></div>
+
+    <div id="empty" class="glass glass-ring">
+      <div class="kicker">No matching reports</div>
+      <div style="font-size:13px;line-height:1.5;margin:8px 0 12px;color:var(--ink-2)">Nothing in this lens for the current filter. This is not a statement that sites are safe.</div>
+      <button class="pill" id="emptyReset">Clear filter</button>
+    </div>
+
+    <div id="unavail">
+      <div class="glass glass-ring" style="width:340px;padding:18px;text-align:center">
+        <div class="kicker">Map unavailable</div>
+        <div style="font-size:13px;line-height:1.5;margin:8px 0 12px;color:var(--ink-2)">Basemap geometry could not be loaded. Review work continues in the queue.</div>
+        <div style="display:flex;gap:8px;justify-content:center"><button class="pill" id="unavailQueue">Open queue</button><button class="pill" id="unavailRetry">Retry</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="wb"></div>
+
+<script src="js/api.js"></script>
+<script src="js/spatial.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+﻿# Environment variables & secrets
+.env
+.env.*
+*.env
+*.key
+*.pem
+secrets/
+
+# Python & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+
+# Database & docker volumes
+pgdata/
+*.sqlite
+*.sqlite3
+*.db
+
+# Node & Frontend
+node_modules/
+.next/
+out/
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Temporary & test files
+*.log
+scratch/
+test_*.png
+test_*.html
