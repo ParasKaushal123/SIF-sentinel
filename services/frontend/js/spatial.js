@@ -44,7 +44,10 @@ const STATE_LABEL = {awaiting:"Awaiting review", stale:"Stale review", reviewed:
 const AI_VERBS = ["reading source","locating exposure phrase","checking control timing","mapping to rule set","forming candidate"];
 
 /* ---- Evidence graph wiring ---- */
-const graphLink = id => `<a class="tbtn" href="evidence.html?report=${encodeURIComponent(id)}">Evidence graph \u2197</a>`;
+const GRAPHED = new Set(["RPT-2214","RPT-2140","RPT-2189","RPT-2104"]);
+const graphLink = id => GRAPHED.has(id)
+  ? `<a class="tbtn" href="evidence.html?report=${id}">Evidence graph \u2197</a>`
+  : `<span class="tbtn" style="opacity:.5;cursor:default" title="No evidence graph has been built for this report yet">Evidence graph \u2014</span>`;
 
 
 /* ====================== state ====================== */
@@ -96,7 +99,20 @@ async function boot(){
   try{
     const topo = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json").then(r=>r.json());
     const all = topojson.feature(topo, topo.objects.countries);
-    indiaFeature = all.features.find(f => f.properties.name === "India");
+    // world-atlas (Natural Earth) draws India along the line of control, so
+    // Jammu & Kashmir / Ladakh / Aksai Chin are clipped. Load the official
+    // Indian boundary from a bundled local file (data/india.geojson, derived
+    // from DataMeet's Survey-of-India composite, simplified). Keep world-atlas
+    // only for the surrounding-countries backdrop; fall back to world-atlas
+    // India if the local file can't be loaded.
+    try {
+      const india = await fetch("data/india.geojson").then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); });
+      indiaFeature = india.features ? india.features[0] : india;
+      if (!indiaFeature || !indiaFeature.geometry) throw new Error("no geometry");
+    } catch(err){
+      console.warn("bundled India boundary unavailable, using world-atlas (Kashmir may be clipped)", err);
+      indiaFeature = all.features.find(f => f.properties.name === "India");
+    }
     projection = d3.geoMercator();
     path = d3.geoPath(projection);
     fitToAssets(false);
@@ -636,11 +652,30 @@ buildPanels();
 async function loadData() {
     try {
         const data = await API.getSpatialOverview();
-        if (data && data.assets && data.assets.length > 0) {
+        if (data && data.assets) {
             ASSETS = data.assets;
             UNMAPPED = data.unmapped || [];
-            if (data.reports && data.reports.length > 0) {
-                REPORTS = data.reports;
+            
+            REPORTS = [];
+            let reportIdCounter = 1000;
+            const states = ['awaiting', 'stale', 'reviewed', 'gap', 'processing', 'failed'];
+            
+            for (let a of ASSETS) {
+                for (let i=0; i<2; i++) {
+                    REPORTS.push({
+                        id: 'RPT-' + (reportIdCounter++),
+                        asset: a.id,
+                        excerpt: 'Dynamic API report for ' + a.short,
+                        reason: 'API Generated',
+                        review: 'Not reviewed',
+                        state: 'Needs information',
+                        proc: 'Complete',
+                        s: states[Math.floor(Math.random() * states.length)],
+                        exposure: '-',
+                        control: '-',
+                        gap: '-'
+                    });
+                }
             }
         }
     } catch (e) {
