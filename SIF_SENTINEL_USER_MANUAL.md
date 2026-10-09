@@ -1,75 +1,76 @@
-﻿# SIF Sentinel — Comprehensive Application Documentation
+﻿# SIF Sentinel — Comprehensive Technical & User Documentation
 
-## 1. Executive Summary & Core Mission
+## 1. System Overview & Philosophy
 
-### Challenge Context: Smart India Hackathon (SIH 2026) — Problem SIH26165
-**SIF Sentinel** is an AI-powered **Precursor & Exposure Intelligence Engine** engineered for **Oil India Limited (OIL)**.
+**SIF Sentinel** is an AI-powered safety intelligence engine built for high-hazard industrial environments—specifically upstream oil and gas exploration, drilling, processing plants, and pipeline networks for **Oil India Limited (OIL)**.
 
-In hazardous energy industries (upstream exploration, drilling, gathering stations, and pipeline terminals), traditional safety reporting suffers from two systemic flaws:
-1. **Outcome Bias ("The Luck Bias"):** Incidents where someone suffered a scrape are classified as "Minor First Aid", even if the worker stood inches from an unisolated 415V breaker or a suspended drilling elevator. The near-miss was identical to a fatality, separated only by luck.
-2. **Superficial Classification & Information Gaps:** Incident forms reduce rich narratives to shallow checkboxes. Crucial safety control verifications (e.g., *"Was a test-for-dead performed before touching the panel?"*, *"Was the exclusion zone set before or after the crane lifted?"*) are omitted or left ambiguous.
+### The Problem: Outcome Bias in HSE Reporting
+In traditional industrial safety management, incident reporting is systematically distorted by **outcome bias** (the "Luck Bias"):
+* When an unlatched 12-ton drill pipe swings free and crushes a compressor skid, it is logged as a *High-Severity / Tier-1 Incident*.
+* When the exact same unlatched pipe swings free and drops harmlessly into the mud because a worker happened to step back to tie their boot, the event is logged as *Minor Near-Miss* or *First Aid*.
 
-### SIF Sentinel's Solution
-SIF Sentinel extracts structured safety facts directly from unstructured incident narratives and evaluates:
-* **High-Energy Hazard** presence (Electrical, Pressure, Suspended Load, Toxic Gas, Heavy Vehicle, Fall from Height).
-* **Worker Exposure** (Direct line of fire, intervening in energized zone).
-* **Control State & Verification Timing** (Was the control verified effective prior to exposure?).
-* **Precursor Identification (P-01 through P-12)**: Aggregating recurring organizational blind spots regardless of whether an injury actually occurred.
+The barrier failure and the hazard exposure were identical; only luck separated the near-miss from a fatality.
 
----
+### The SIF Sentinel Solution
+SIF Sentinel acts as an automated triage intelligence layer. It reads unstructured, free-text safety narratives (daily logs, observation cards, unsafe act reports) and extracts:
+1. **High-Energy Hazard Mechanisms**: Kinetic, gravitational, electrical, pressurized fluid/gas, toxic atmospheres, mechanical rotating parts.
+2. **Worker Exposure State**: Physical proximity, line of fire, intervening within an energized perimeter.
+3. **Control Barrier Timing & Verification**: Was a recognized barrier (lockout-tagout, pressure release bleed, certified exclusion zone, gas detection) verified effective *prior* to worker exposure?
 
-## 2. Navigation Architecture & Global Elements
-
-Every page in SIF Sentinel shares a unified navigation and design system:
-* **Floating Glass Dock (Left Edge):**
-  * **Map Icon (index.html)**: Spatial Command Centre — geographical exposure distribution across Oil India assets.
-  * **Analytics Icon (insights.html)**: Pattern Observatory — deep-dive precursor trends, gaps, and triage.
-  * **Evidence Graph (evidence.html)**: Causal DAG — interactive graph showing how narrative words map to hazards, controls, and final SIF classification.
-  * **Upload Icon (import.html)**: Data Pipeline & Ingestion Wizard.
-  * **Science Flask (lab.html)**: Luck Lab — Side-by-side outcome-bias sandbox.
-* **Top Header:** Displays active dataset version (OIL India · v2026.03), system status, and filter breadcrumbs.
+By cross-referencing these components, SIF Sentinel identifies **Serious Injury or Fatality (SIF) Precursors** across 12 canonical operational patterns, alerting HSE leadership before an incident results in death or disability.
 
 ---
 
-## 3. Detailed Breakdown by Page
+## 2. Global Navigation & Architecture
 
-### Page 1: Spatial Command Centre (index.html)
+SIF Sentinel uses a responsive, glassmorphic design system ("Pattern Observatory") built with vanilla HTML5, CSS3 Custom Properties, ES6 modules, and D3.js:
 
-The entry point of SIF Sentinel. It displays an interactive geographic projection of India highlighting Oil India installations and real-time precursor signals.
-
-#### Key Features & Visual Elements:
-1. **Interactive D3 India Choropleth / Basemap:**
-   * High-definition vector boundaries with smooth pan and zoom.
-   * Pinpoints core Oil India operating sectors:
-     * **Assam Basin**: Naharkatiya Block (AST-01), Moran Gathering Station (AST-02), Rig OIL-D-12 (AST-03), Kumchai Field (AST-04), Jorhat Compressor Station (AST-05).
-     * **Krishna Godavari (KG) Offshore**: Block SY-03 (AST-06).
-     * **Rajasthan Onshore**: Jaisalmer Exploration Prospect (AST-07).
-2. **Asset Glyphs & Indicators:**
-   * Each asset marker indicates asset type:
-     * ◇ Onshore Field
-     * ◈ Gathering / Compressor Station
-     * ⌬ Drilling Rig
-     * ⬡ Offshore Platform
-     * △ Exploration
-   * Marker size scales proportionally with the number of flagged reports or active information gaps.
-3. **Analytical Lenses (Top Pill Bar):**
-   * **Review Attention Lens:** Highlights sites where human safety review is overdue, stale (>90 days), or unassigned.
-   * **Information Gaps Lens:** Isolates sites where crucial safety controls were mentioned in narratives without verification proof (e.g. missing isolation certificate, unverified depressurisation, absent gas detector reading).
-   * **All Assets Lens:** Displays total cumulative report density.
-4. **Site Inspector Card (Right Pane):**
-   * Clicking any asset opens a slide-over panel displaying:
-     * Asset metadata (Region, Asset ID, Coordinate confidence).
-     * Breakdown of reports by status (*Serious-risk candidate*, *Needs information*, *Low potential*, *Reviewed*).
-     * **Feed of Individual Incident Reports**: Showing excerpt, exposure type, control failure, and exact information gap.
-     * **Evidence Graph Shortcut (↗)**: Direct deep-link to inspect that exact incident's causal breakdown in evidence.html.
-5. **Unmapped Queue Indicator:**
-   * Bottom banner detailing reports from locations pending coordinate resolution (e.g. Dibrugarh Terminal, Barmer Gathering Line).
+* **Floating Dock (Left Screen Edge):**
+  * 🗺️ **Command Centre (`index.html`)**: Interactive geographic projection of Oil India installations, asset statuses, and risk lenses.
+  * 📊 **Pattern Observatory (`insights.html`)**: Real-time aggregation of safety narratives into 12 precursor stream families.
+  * 🕸️ **Evidence Graph (`evidence.html`)**: Causal Directed Acyclic Graph (DAG) illustrating how words in a narrative produce safety classifications.
+  * 📤 **Import Wizard (`import.html`)**: Bulk CSV and report file ingestion pipeline.
+  * 🧪 **Luck Lab (`lab.html`)**: Side-by-side outcome-bias demonstration sandbox.
+* **Header Bar:**
+  * Active dataset pill (`OIL India · v2026.03`), search field, and navigation breadcrumbs.
 
 ---
 
-### Page 2: Pattern Observatory (insights.html)
+## 3. In-Depth Screen Specifications
 
-The strategic intelligence layer. It aggregates individual incident reports into **12 Canonical Organizational Precursors (P-01 to P-12)**.
+### 1. Spatial Command Centre (`index.html`)
+
+The operational map provides visibility across Oil India's active geographic basins.
+
+#### Key Components:
+1. **Interactive D3 India Basemap:**
+   * High-precision vector rendering using bundled official Survey of India boundary data (`data/india.geojson`) ensuring correct regional boundaries (including Jammu & Kashmir, Ladakh, and Assam).
+   * Pan, zoom, and parallax controls with smooth transitions.
+2. **Asset Markers & Categorization:**
+   * Plots major installations:
+     * **Assam Basin**: Naharkatiya Block (`AST-01`), Moran Gathering Station (`AST-02`), Rig OIL-D-12 (`AST-03`), Kumchai Field (`AST-04`), Jorhat Compressor (`AST-05`).
+     * **KG Offshore**: Block SY-03 (`AST-06`).
+     * **Rajasthan**: Jaisalmer Exploration Prospect (`AST-07`).
+   * Visual glyphs identify facility types:
+     * `◇` Onshore Field
+     * `◈` Processing Installation
+     * `⌬` Drilling Rig
+     * `⬡` Offshore Platform
+     * `△` Exploration
+3. **Operational Lenses:**
+   * **Review Attention**: Highlights sites with overdue human reviews or unverified model classifications.
+   * **Information Gaps**: Isolates sites with critical narrative omissions (e.g. isolation claimed without test-for-dead records).
+   * **All Assets**: Visualizes gross report density.
+4. **Site Inspector Slide-Over:**
+   * Selecting any asset opens a detail drawer showing:
+     * Total reports, pending reviews, and information gaps.
+     * Scrollable feed of individual site reports with narrative excerpts, hazard identification, and direct shortcuts (`↗`) to the interactive evidence graph.
+
+---
+
+### 2. Pattern Observatory (`insights.html`)
+
+The executive intelligence dashboard. It transforms isolated incident logs into organizational trends across 12 canonical SIF precursor patterns.
 
 #### The 12 Canonical Precursor Patterns:
 * **P-01**: *Electrical Energy · Isolation · Effectiveness not established*
@@ -85,87 +86,65 @@ The strategic intelligence layer. It aggregates individual incident reports into
 * **P-11**: *Excavation / Trenching · Underground Utility Scan · Record absent*
 * **P-12**: *Hot Work · Spark Containment / Standby · Control compromised*
 
-#### Key Features:
-1. **Macro KPI Header:**
-   * **Eligible Reports**: Total corpus ingested.
-   * **Classified**: Reports with complete hazard-exposure-control tuples.
-   * **Unresolved**: Reports stuck in ambiguity requiring field clarification.
-   * **Human Reviewed**: Reports audited and signed off by safety officers.
-2. **Stream Density Bars:**
-   * Dynamic visual progress bars showing the volume of incidents belonging to each pattern family, normalized against peak activity.
-3. **Pattern Inspector Modal:**
-   * Clicking on any pattern reveals:
-     * **Activity, Hazard, Exposure, Control, and State**.
-     * **Why this is a gap**: Human-readable explanation of why this pattern is dangerous.
-     * **Full Report Table**: All underlying reports with site names, narrative excerpts, and one-click access to their causal evidence graph.
+#### Visual Features:
+* **Stream Density Bars**: Dynamic proportional bars showing incident distribution normalized against peak volume.
+* **KPI Ribbon**: Total eligible reports, complete extractions, unresolved ambiguities, and human audit status.
+* **Pattern Inspector**: Detailed modal with underlying causal definitions, explanation of the safety gap, and member report listings.
 
 ---
 
-### Page 3: Evidence Graph (evidence.html)
+### 3. Forensic Evidence Graph (`evidence.html`)
 
-The forensic explainability layer. SIF Sentinel never acts as a black box; every prediction produces a verifiable **Causal Directed Acyclic Graph (DAG)**.
+Provides transparent explainability for AI extractions.
 
-#### How It Works:
-1. **Interactive Node-Link Canvas (Cytoscape / Vector Engine):**
-   * **Source Node**: Raw narrative excerpt extracted from the field incident.
-   * **Hazard Node**: The high-energy source detected (e.g., *Kinetic / Suspended Load 12T*).
-   * **Exposure Node**: Worker position (e.g., *Worker standing within swing radius*).
-   * **Control Node**: The defense barrier (e.g., *Red tape / Physical exclusion barrier*).
-   * **State / Timing Node**: Temporal relationship (*Was control present before hazard release?*).
-   * **SIF Classification Node**: Final assessment (*SIF Precursor Qualified vs Low Potential*).
-2. **Confidence & Evidence Highlighting:**
-   * Clicking any node in the graph highlights the exact phrase in the source narrative text from which the AI extracted that fact.
-3. **Interactive Timeline / Scrubber:**
-   * Bottom slider allowing safety auditors to step through the chronological sequence of events (T0 = Preparation, T1 = Intervention, T2 = Barrier Breakdown, T3 = Energy Release).
-
----
-
-### Page 4: Ingestion Pipeline (import.html)
-
-The data intake portal:
-* Allows safety managers to drag-and-drop raw CSV, Excel, or text dumps of daily safety logs.
-* Maps custom column headers (e.g. *Incident Description*, *Location*, *Date*, *Severity Checkbox*) to SIF Sentinel's schema.
-* Pre-validates formatting before queuing narratives for asynchronous background classification.
+#### Features:
+* **Causal Directed Acyclic Graph (DAG):**
+  * Maps connections from raw source text to hazard nodes, exposure mechanisms, barrier evaluations, and final SIF potential.
+* **Bidirectional Ground-Truth Highlighting:**
+  * Clicking any node in the graph instantly highlights the exact supporting sentence in the original narrative text.
+* **Temporal Scrubber:**
+  * Timeline control allowing safety officers to step chronologically through the event:
+    * **T0**: Work Planning & Permit Issuance
+    * **T1**: Worker Position & Exposure
+    * **T2**: Barrier Compromise / Failure
+    * **T3**: Energy Release / Incident Occurrence
 
 ---
 
-### Page 5: The "Luck Lab" (lab.html)
+### 4. The Luck Lab (`lab.html`)
 
-The core demonstration of **Outcome Bias Resistance**.
+The empirical test chamber demonstrating outcome-bias resistance.
 
-#### How to Use It:
-1. **Side-by-Side Narrative Comparison**:
-   * **Scenario A (Catastrophe)**: A heavy drill casing slips from a crane hoist and crushes equipment because the hoist latch pin was omitted. (Traditional classification: *Level 5 Critical Incident*).
-   * **Scenario B (Near Miss / Luck)**: A heavy drill casing slips from a crane hoist and lands in the mud 2 feet away because the hoist latch pin was omitted; nobody is hurt. (Traditional classification: *Level 1 Minor Near Miss*).
-2. **Run Comparison**:
-   * SIF Sentinel classifies **both** scenarios into the exact same category: **SIF Precursor (High SIF Potential)** with an identical **Evidence Graph**.
-   * Demonstrates to auditors that safety interventions must focus on **energy and barriers**, not whether someone got lucky.
-
----
-
-## 4. User Personas & Workflows
-
-### Persona 1: Field Safety Auditor / Rig Safety Officer
-* **Primary Page:** index.html (Spatial Command Centre)
-* **Workflow:**
-  1. Open the Map and switch to the **Information Gaps** lens.
-  2. Select their asset (e.g. *Rig OIL-D-12*).
-  3. Review reports flagged as *Needs Information*.
-  4. Notice that an electrical isolation report lacks a verification test log.
-  5. Click **Evidence Graph** to verify the missing link, then request clarification from the shift supervisor.
-
-### Persona 2: Corporate HSE Director (Oil India HQ)
-* **Primary Page:** insights.html (Pattern Observatory)
-* **Workflow:**
-  1. Open Insights to view the global precursor health of all operating basins.
-  2. Identify that **P-01 (Energy Isolation)** and **P-03 (Suspended Load)** constitute 45% of all precursor signals across Assam.
-  3. Export pattern analytics to issue a targeted corporate safety stand-down focusing on hoist latching protocols before an actual fatality occurs.
+#### Workflow:
+1. Input two reports side-by-side:
+   * **Report A (Severe Consequence)**: Load drops from crane hoist, destroys equipment.
+   * **Report B (No Consequence)**: Same load drops from crane hoist due to the same missing latch pin, but misses everyone.
+2. Click **Run Comparison**.
+3. The engine produces the exact same classification (**SIF Precursor P-03**) and identical barrier breakdown graphs for both, demonstrating that safety interventions must focus on barrier integrity, not outcome luck.
 
 ---
 
-## 5. Technology Stack Summary
+### 5. Ingestion Pipeline (`import.html`)
 
-* **Frontend:** Vanilla HTML5, CSS3 Custom Properties, Modern ES6 JavaScript, D3.js (Geographic vector projection), IBM Plex Mono + Space Grotesk typography. Zero external framework dependencies for ultra-fast CDN loading.
-* **Backend:** FastAPI (Python 3.11), SQLAlchemy 2.0 (Async), Pydantic v2 schemas.
-* **Database:** PostgreSQL with relational integrity for datasets, assets, narratives, and extracted causal nodes.
-* **Extraction Engine:** LLM Adapter Pipeline with fallback deterministic heuristics, strict JSON schema extraction prompts, and evidence ground-truth alignment.
+The enterprise data onboarding module:
+* Accepts drag-and-drop CSV or Excel incident exports.
+* Pre-validates mandatory narrative fields.
+* Enqueues reports for asynchronous background classification.
+
+---
+
+## 4. End-to-End Operational Workflows
+
+### Workflow 1: Rig Safety Officer (Daily Field Triage)
+1. Navigate to the **Spatial Command Centre (`index.html`)**.
+2. Select the **Information Gaps** lens.
+3. Click your assigned installation (e.g., *Rig OIL-D-12*).
+4. Review reports flagged as *Needs Information*.
+5. Click **Evidence Graph (`↗`)** to inspect why the extraction flagged an ambiguity (e.g. missing elevator latch check record).
+6. Request direct field verification from the rig floor before authorizing subsequent operations.
+
+### Workflow 2: Corporate HSE Leadership (Basin-Wide Prevention)
+1. Open the **Pattern Observatory (`insights.html`)**.
+2. Examine the stream density bars across the 12 precursor families.
+3. Identify spikes in specific patterns (e.g., **P-01 Electrical Isolation** or **P-04 Vehicle Spotter Absence**).
+4. Export the pattern audit trail to issue targeted corporate safety bulletins before a fatality occurs.
