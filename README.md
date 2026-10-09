@@ -1,10 +1,10 @@
-﻿<a name="top"></a>
+<a name="top"></a>
 
 # 🛡️ SIF Sentinel
 
 <p align="center">
   <b>AI-Powered Precursor & Exposure Intelligence Engine for High-Hazard Energy Operations</b><br>
-  <i>"No injury is an outcome — not evidence of protection."</i>
+  No injury is an outcome — not evidence of protection.
 </p>
 
 <p align="center">
@@ -56,32 +56,27 @@ In upstream exploration, drilling, gas gathering stations, and pipeline networks
 
 **SIF Sentinel eliminates this outcome bias.** It analyzes the high-energy hazard, worker exposure, and control barrier efficacy, treating the near-miss and the catastrophe with identical preventative urgency.
 
-`
-       UNSTRUCTURED NARRATIVE
-  "Worker adjusted 415V breaker
-   without multimeter test..."
-                │
-                ▼
-      ┌───────────────────┐
-      │  SIF SENTINEL AI  │ ──► Extracts: [Hazard: Electrical Energy]
-      │  ANALYSIS ENGINE  │ ──► Extracts: [Exposure: Worker Intervening]
-      └───────────────────┘ ──► Extracts: [Barrier: Isolation Unverified]
-                │
-                ▼
-   PRECURSOR CLASSIFICATION: P-01
-   "Energy Isolation · Effectiveness Not Established"
-   (Flagged regardless of zero-injury outcome)
-`
+```mermaid
+flowchart TD
+    A["UNSTRUCTURED SAFETY NARRATIVE<br>Worker adjusted 415V breaker without multimeter test"] --> B[SIF SENTINEL ANALYSIS ENGINE]
+    B --> C1["Extract: Hazard = Electrical Energy"]
+    B --> C2["Extract: Exposure = Worker Intervening"]
+    B --> C3["Extract: Barrier = Isolation Unverified"]
+    C1 --> D[PRECURSOR CLASSIFICATION: P-01]
+    C2 --> D
+    C3 --> D
+    D --> E["Flagged: Energy Isolation · Effectiveness Not Established"]
+```
 
 ---
 
 ## 🧠 Core Innovation: The Luck Test
 
-> *"No injury is an outcome — not evidence of protection."*
+No injury is an outcome — not evidence of protection.
 
 When a safety report reads "no injury occurred", that fact describes **what happened at the end**, not whether the defense barriers functioned. SIF Sentinel evaluates three deterministic dimensions:
 
-1. **High-Energy Hazard**: Gravitational (suspended load, height), Electrical (energized switchgear), Pressure (hydrocarbon lines), Mechanical (rotating machinery), Toxic Gas ($, methane).
+1. **High-Energy Hazard**: Gravitational (suspended load, height), Electrical (energized switchgear), Pressure (hydrocarbon lines), Mechanical (rotating machinery), Toxic Gas (H2S, methane).
 2. **Exposure Mechanism**: Was a worker physically located inside the energy release corridor?
 3. **Control Barrier Timing & Efficacy**: Was a certified physical barrier, lockout/tagout, or exclusion zone verified effective *before* the worker intervened?
 
@@ -94,7 +89,7 @@ If high energy was present and control verification is missing, SIF Sentinel cla
 - **Interactive Spatial Command Centre:** High-performance D3 vector basemap plotting Oil India assets across Assam, Rajasthan, and KG Offshore with real-time operational lenses (*Review Attention*, *Information Gaps*, *Total Density*).
 - **Pattern Observatory:** Aggregates messy free-text logs into **12 Canonical Organizational Precursors (P-01 to P-12)** with dynamic stream density bars and human-readable gap explanations.
 - **Explainable Evidence Graphs (DAGs):** Generates interactive causal Directed Acyclic Graphs tracing how specific words in the source narrative map to hazards, exposures, barrier failures, and SIF potential.
-- **Audit-Ready Explainability:** Clicking any node in the evidence graph highlights the exact phrase in the source narrative, eliminating "black-box" AI guesswork.
+- **Audit-Ready Explainability:** Clicking any node in the evidence graph highlights the exact phrase in the source narrative, eliminating black-box AI guesswork.
 - **The Luck Lab:** A side-by-side sandbox comparing two incident narratives (e.g. fatal outcome vs. lucky near-miss) to prove identical precursor classification.
 - **Glassmorphic Pattern Observatory UI:** Ergonomic interface built on vanilla ES6, CSS3 custom properties, Space Grotesk, and IBM Plex Mono typography with zero heavy framework overhead.
 
@@ -102,39 +97,37 @@ If high energy was present and control verification is missing, SIF Sentinel cla
 
 ## 🏗️ Architecture & Tech Stack
 
-`
-┌────────────────────────────────────────────────────────────────────────┐
-│                          FRONTEND OBSERVATORY                          │
-│        Vanilla HTML5 · CSS3 Custom Tokens · ES6 Modules · D3.js        │
-│                                                                        │
-│   ┌──────────────────┐  ┌──────────────────┐  ┌────────────────────┐   │
-│   │ Spatial Command  │  │ Pattern Observ.  │  │   Evidence Graph   │   │
-│   │  (index.html)    │  │ (insights.html)  │  │  (evidence.html)   │   │
-│   └────────┬─────────┘  └────────┬─────────┘  └─────────┬──────────┘   │
-└────────────┼─────────────────────┼──────────────────────┼──────────────┘
-             │                     │                      │
-             ▼ REST /api/v1 (JSON) │                      │
-┌──────────────────────────────────┴──────────────────────┴──────────────┐
-│                           FASTAPI BACKEND API                          │
-│               Python 3.11/3.12 · Pydantic v2 · SQLAlchemy 2            │
-│                                                                        │
-│   ┌──────────────────┐  ┌──────────────────┐  ┌────────────────────┐   │
-│   │ Insights Service │  │  Report Service  │  │   Import Service   │   │
-│   └────────┬─────────┘  └────────┬─────────┘  └─────────┬──────────┘   │
-│            └─────────────────────┼──────────────────────┘              │
-│                                  │                                     │
-│                        Extraction & Policy                             │
-│                  (Adapter Pattern: Fixture / LLM)                      │
-└──────────────────────────────────┬─────────────────────────────────────┘
-                                   │
-              ┌────────────────────┴───────────────────┐
-              ▼                                        ▼
-   ┌─────────────────────┐                  ┌─────────────────────┐
-   │    ANALYSIS WORKER  │                  │    POSTGRESQL 16    │
-   │   Job Queue Poller  │ ◄──────────────► │  14 Tables + JSONB  │
-   │ (SKIP LOCKED Lease) │                  │ Relational Storage  │
-   └─────────────────────┘                  └─────────────────────┘
-`
+```mermaid
+flowchart TB
+    subgraph UI["FRONTEND OBSERVATORY (Vanilla HTML5 / CSS3 / ES6 / D3.js)"]
+        F1["Spatial Command (index.html)"]
+        F2["Pattern Observatory (insights.html)"]
+        F3["Evidence Graph (evidence.html)"]
+    end
+
+    subgraph API["FASTAPI BACKEND (Python 3.11 / Pydantic v2 / SQLAlchemy 2)"]
+        direction TB
+        E1["Insights Service"]
+        E2["Report Service"]
+        E3["Import Service"]
+        POL["Extraction & Policy Engine"]
+        E1 --> POL
+        E2 --> POL
+        E3 --> POL
+    end
+
+    subgraph WORKER["BACKGROUND WORKER"]
+        W1["Job Queue Poller (SKIP LOCKED)"]
+    end
+
+    subgraph DB["DATABASE"]
+        D1[("PostgreSQL 16 Relational Tables + JSONB")]
+    end
+
+    UI -->|REST /api/v1 JSON| API
+    API --> DB
+    WORKER <-->|Lease & Update Jobs| DB
+```
 
 | Layer | Technologies | Rationale |
 |---|---|---|
@@ -152,14 +145,14 @@ If high energy was present and control verification is missing, SIF Sentinel cla
 
 Run the entire full-stack application (PostgreSQL + FastAPI + Worker + Frontend):
 
-`ash
+```bash
 # Clone the repository
 git clone https://github.com/ParasKaushal123/SIF-sentinel.git
 cd SIF-sentinel/infra
 
 # Spin up all containers
 docker compose up -d
-`
+```
 
 Open your browser:
 * 🌐 **Frontend Observatory**: [http://localhost:8000](http://localhost:8000)
@@ -171,12 +164,12 @@ Open your browser:
 ### Option B: Local Python Development
 
 #### 1. Backend Setup
-`ash
+```bash
 cd services/backend
 
 # Create virtual environment
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate  # On Windows: .venv\Scriptsctivate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -187,31 +180,31 @@ python -m app.cli.seed
 
 # Start the API server
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-`
+```
 
 #### 2. Start Worker (in a separate terminal)
-`ash
+```bash
 cd services/backend
 python -m app.worker.main
-`
+```
 
 ---
 
 ### Option C: Cloud Deployment (Vercel)
 
 The frontend is fully decoupled and ready for instant deployment on Vercel:
-1. Import ParasKaushal123/SIF-sentinel on **[Vercel](https://vercel.com)**.
-2. Set **Root Directory** to services/frontend.
+1. Import `ParasKaushal123/SIF-sentinel` on **[Vercel](https://vercel.com)**.
+2. Set **Root Directory** to `services/frontend`.
 3. Framework Preset: **Other**.
 4. Click **Deploy**.
 
-> *Note:* If deployed without an active backend, the frontend automatically falls back to the bundled Oil India benchmark dataset so all visualisations and graphs work smoothly for demonstration.
+> Note: If deployed without an active backend, the frontend automatically falls back to the bundled Oil India benchmark dataset so all visualisations and graphs work smoothly for demonstration.
 
 ---
 
 ## 🔍 Walkthrough of System Modules
 
-### 1. Spatial Command Centre (index.html)
+### 1. Spatial Command Centre (`index.html`)
 Visualises regional risk concentrations across Oil India's operational assets:
 * **Naharkatiya & Moran**: Primary upstream drilling and gathering installations in Upper Assam.
 * **Rig OIL-D-12 & Kumchai**: Heavy onshore drilling rigs and development fields.
@@ -219,7 +212,7 @@ Visualises regional risk concentrations across Oil India's operational assets:
 * **Jaisalmer Prospect**: High-temperature desert drilling operations in Rajasthan.
 * **Lenses**: Toggle between **Review Attention** (audit backlogs) and **Information Gaps** (unverified barrier claims).
 
-### 2. Pattern Observatory (insights.html)
+### 2. Pattern Observatory (`insights.html`)
 Synthesises raw reports into the 12 canonical SIF precursor patterns:
 * **P-01 to P-02**: Electrical Isolation (*Unverified vs. Meter-verified*).
 * **P-03**: Suspended Loads (*Exclusion zones declared post-lift*).
@@ -228,17 +221,17 @@ Synthesises raw reports into the 12 canonical SIF precursor patterns:
 * **P-06**: Drilling String Mechanical Tension (*Elevator latch uninspected*).
 * **P-07 to P-12**: Line of fire, confined spaces, depressurisation conflicts, height drops, and hot work.
 
-### 3. Forensic Evidence Graph (evidence.html)
+### 3. Forensic Evidence Graph (`evidence.html`)
 Provides full explainability for each classification:
 * Renders a Directed Acyclic Graph connecting **Narrative Excerpt ➔ Hazard ➔ Exposure ➔ Barrier State ➔ Precursor Output**.
-* Interactive time scrubber allowing investigators to walk through the event from $ (preparation) to $ (energy release).
+* Interactive time scrubber allowing investigators to walk through the event from T0 (preparation) to T3 (energy release).
 
-### 4. The Luck Lab (lab.html)
+### 4. The Luck Lab (`lab.html`)
 Outcome-bias demonstration suite:
 * Enter two contrasting safety reports side-by-side.
 * Witness the classification engine ignore the outcome ("worker escaped unhurt") and focus strictly on the failed barrier, demonstrating true outcome resistance.
 
-### 5. Batch Ingestion Pipeline (import.html)
+### 5. Batch Ingestion Pipeline (`import.html`)
 * Batch CSV and raw incident ingestion wizard with pre-validation and asynchronous queueing for large historical safety archives.
 
 ---
@@ -247,12 +240,12 @@ Outcome-bias demonstration suite:
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | /api/v1/health | Returns health status of API, database, and background worker |
-| GET | /api/v1/insights/spatial | Returns mapped Oil India assets, coordinates, report counts, and unmapped sites |
-| GET | /api/v1/insights/patterns | Returns the 12 canonical precursor groups with member report excerpts and gap analysis |
-| GET | /api/v1/reports | Paginated list of ingested incident reports with filters by site, status, and hazard |
-| POST | /api/v1/reports | Ingests a new narrative report and enqueues it for SIF analysis |
-| POST | /api/v1/lab/compare | Compares two safety narratives side-by-side for outcome-bias resilience testing |
+| `GET` | `/api/v1/health` | Returns health status of API, database, and background worker |
+| `GET` | `/api/v1/insights/spatial` | Returns mapped Oil India assets, coordinates, report counts, and unmapped sites |
+| `GET` | `/api/v1/insights/patterns` | Returns the 12 canonical precursor groups with member report excerpts and gap analysis |
+| `GET` | `/api/v1/reports` | Paginated list of ingested incident reports with filters by site, status, and hazard |
+| `POST` | `/api/v1/reports` | Ingests a new narrative report and enqueues it for SIF analysis |
+| `POST` | `/api/v1/lab/compare` | Compares two safety narratives side-by-side for outcome-bias resilience testing |
 
 ---
 
@@ -260,10 +253,10 @@ Outcome-bias demonstration suite:
 
 Contributions and feedback from safety professionals and software engineers are very welcome!
 
-1. Fork the Project (https://github.com/ParasKaushal123/SIF-sentinel/fork)
-2. Create your Feature Branch (git checkout -b feature/AmazingFeature)
-3. Commit your Changes (git commit -m 'Add some AmazingFeature')
-4. Push to the Branch (git push origin feature/AmazingFeature)
+1. Fork the Project (`https://github.com/ParasKaushal123/SIF-sentinel/fork`)
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ---
